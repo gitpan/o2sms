@@ -1,0 +1,1087 @@
+#!/usr/bin/perl
+
+=head1 o2sms
+
+o2sms - A perl script to send SMS messages using .ie websites.
+
+=head1 DESCRIPTION
+
+C<o2sms> is a script to send SMS messages via the command line using the websites
+of Irish mobile operators. This is done by simulating a web browser's
+interaction with those websites. This script requires a valid web account with
+O2 Ireland, Vodafone Ireland or Meteor Ireland.
+ 
+The author accepts no responsibility nor liability for your use of this
+software.  Please read the terms and conditions of the website of your mobile
+provider before using the program.
+
+=cut
+
+use strict;
+use warnings;
+use vars qw( $VERSION );
+
+# -- modules
+use File::stat;
+use Getopt::Long;
+use Pod::Usage;
+use Term::ReadLine;
+use POSIX qw(strftime);
+use threads;
+use threads::shared;
+
+$|++;
+
+# -- constants
+use constant OUTPUT_AUTOFLUSH_BUFFERED  => 0;
+use constant OUTPUT_AUTOFLUSH_UNBUFFERED => 1;
+use constant OFF => 0;
+use constant ON => 1;
+use constant EXIT_SUCCESS => 1;
+use constant EXIT_FAILURE => 0;
+
+# -- global vars
+my $svnid = '$Id: o2sms 159 2006-02-27 15:29:50Z mackers $';
+$VERSION = '3.00'; 
+
+my $sms_max_length = 500;
+my $man_delim = "\\\\\\\\";
+my $single_max_length;
+
+my $username;
+my $password;
+my $message;
+my $signature = "";
+my $config_file;
+my $http_proxy;
+my $https_proxy;
+my $carrier_name;
+my $embedded = OFF;
+my $split_messages = ON;
+my $reuse_cookies = ON;
+my $hard_split = OFF;
+my $emulate_t9 = OFF;
+my $squeeze_text = OFF;
+my $debug_really_send = ON;
+my $debug_level = 0;
+my $readline_support = 1;
+my $widdley_enabled = 1;
+
+my $term;
+my $carrier;
+my %recipients;
+my @message_parts;
+my $message_whole;
+my %aliases;
+my $RL_OUT;
+
+#my @widdley_anim = qw"- \ | /";
+my @widdley_anim = qw". o O o";
+my $widdley_after = 8;
+my $widdley_on : shared = 0;
+my $widdley_thread;
+
+my %options = (
+	"username|u=s"	=> \$username,
+	"password|p=s"	=> \$password,
+	"message|m=s"	=> \$message,
+	"sig|s=s"	=> \$signature,
+	"config-file|c=s" => \$config_file,
+	"http-proxy|proxy|P=s"	=> \$http_proxy,
+	"https-proxy"	=> \$https_proxy,
+	"carrier|C=s"	=> \$carrier_name,
+	"embedded!"	=> \$embedded,
+	"split-messages|split|s!"	=> \$split_messages,
+	"reuse-cookies|reuse|r!"	=> \$reuse_cookies,
+	"hard-split|k!"	=> \$hard_split,
+	"emulate-t9|t9!"	=> \$emulate_t9,
+	"squeeze-text|squeeze|z!"	=> \$squeeze_text,
+	"version|v"	=> sub { &print_version_and_exit(0) },
+	"help|usage|h"	=> sub { &print_usage_and_exit(0) },
+	"debug|verbose|d|V+"	=> \$debug_level,
+	"send!"	=> \$debug_really_send,
+	);
+
+$SIG{INT} = \&fade_away;
+
+# -- migrate v2.x settings to v3
+&migrate_settings();
+
+# -- load config (and set up $carrier)
+
+&load_configuration();
+
+# -- initialise readline
+
+if (($readline_support) && ($^O ne 'darwin') && ($term = new Term::ReadLine $carrier->full_name()))
+{
+	$RL_OUT = $term->OUT || \*STDOUT;
+	&log_debug("ReadLine support enabled");
+}
+else
+{
+	# darwin's readline hooks are very broken
+	$RL_OUT = \*STDOUT;
+	$readline_support = 0;
+	&log_debug("ReadLine support disabled");
+}
+
+# -- process recipients
+
+if (!(%recipients = &process_recipients(@ARGV)))
+{
+	&print_usage_and_exit(1);
+}
+
+# -- print welcome message
+
+&log_info("recipient" . (scalar(keys(%recipients))>1?"(s)":"") . " : " . &prettyprint_recipients(%recipients));
+
+# -- read and process the message
+
+if (!defined($message_whole))
+{
+	#read message
+	$message_whole = &read_message();
+}
+
+if (!defined($message_whole) || (length($message_whole) == 0))
+{
+	&fade_away();
+}
+
+@message_parts = &process_message($message_whole);
+
+if (scalar(@message_parts) == 0)
+{
+	&fade_away();
+}
+
+# -- login and send the message
+
+if ($carrier->is_logged_in() && ($reuse_cookies == ON))
+{
+	&log_info("reusing last login for $username\@" . $carrier->domain_name() . " ...");
+}
+else
+{
+	&log_info("logging in to $username\@" . $carrier->domain_name() . " ...", 1);
+
+	# -- get a password
+	if (!defined($password))
+	{
+		$password = &read_password();
+	}
+
+	# -- start a widdley
+	&widdley_start();
+
+	my $retval = $carrier->login($username, $password);
+
+	&widdley_stop();
+	print "]\n";
+
+	if ($retval)
+	{
+		&log_info("login successful");
+	}
+	else
+	{
+		&log_fatal("login failed; " . $carrier->error());
+	}
+}
+
+NUMBER: foreach my $number (keys(%recipients))
+{
+	my $message_part_number = 1;
+	my $message_part_count = scalar(@message_parts);
+
+	MESSAGE: foreach my $message_part (@message_parts)
+	{
+		RETRY: while (1)
+		{
+			# -- start a widdley
+			&widdley_start();
+
+			my $retval = $carrier->send($number, $message_part);
+
+			&widdley_stop();
+
+			if ($retval)
+			{
+				my $sent_msg 	= "message "
+						. ($message_part_count>1?"(part $message_part_number of $message_part_count) ":"")
+						. "sent to $number, "
+						. $carrier->remaining_messages() . " remaining this month";
+
+				&log_info($sent_msg);
+
+				last RETRY;
+			}
+			else
+			{
+				&log_error("message sending failed; " . $carrier->error());
+
+				if (!yn_prompt("Retry ?"))
+				{
+					&log_fatal("okay, I'm outta here");
+				}
+			}
+		}
+	}
+
+	$message_part_number++;
+}
+
+# -- do exity stuff
+
+$carrier->write_message_file($message_whole);
+&save_aliases();
+
+# -- quit with success
+exit(0);
+
+# -- subs
+
+sub get_http_proxy
+{
+	my $http_proxy;
+
+	if (defined($ENV{HTTPS_PROXY}))
+	{
+		$http_proxy = $ENV{HTTPS_PROXY};
+	}
+	else
+	{
+		$http_proxy = $ENV{HTTP_PROXY};
+	}
+
+	return $http_proxy;
+}
+
+sub guess_carrier_name
+{
+	if ($0 =~ /voda(fone)?sms(\.pl)?$/i)
+	{
+		return "vodafone";
+	}
+	elsif ($0 =~ /met(eor)?sms(\.pl)?$/i)
+	{
+		return "meteor";
+	}
+	elsif ($0 =~ /o2sms(\.pl)?$/i)
+	{
+		return "o2";
+	}
+	else
+	{
+		return undef;
+	}
+}
+
+sub get_username
+{
+	unless ($^O eq 'MSWin32')
+	{
+		return ( getpwuid $< ) [0];
+	}
+
+	return "user";
+}
+
+sub print_usage_and_exit
+{
+	pod2usage(-exitval => $_[0], -verbose => 1);
+}
+
+sub print_version_and_exit
+{
+	print "$0 version $VERSION\n";
+	exit($_[0]);
+}
+
+sub process_command_line_options
+{
+	Getopt::Long::Configure("bundling_override");
+	Getopt::Long::Configure("prefix_pattern=(-|--)");
+
+	GetOptions(%options) or &print_usage_and_exit(1);
+	# recipents are now in $ARGV
+
+	return 1;
+}
+
+# load configuration from the command line and/or conf file
+sub load_configuration
+{
+	# parse arguments
+	&process_command_line_options();
+
+	if (defined($config_file))
+	{
+		# another conf file has been specified, read that...
+		if (!&read_config_file($config_file))
+		{
+			&log_error("can't read the configuration file '$config_file'");
+		}
+
+		# ... and load the command line options again to overwrite defaults in config file
+		&process_command_line_options();
+	}
+
+	if (!defined($carrier_name))
+	{
+		# carrier not configured, try to guess based on name of program
+		if (!($carrier_name = &guess_carrier_name()))
+		{
+			&log_fatal("don't know what sms service provider to use");
+		}
+	}
+
+	# set up carrier object 
+	$carrier = &get_carrier($carrier_name);
+
+	if (!defined($config_file) && (-f $carrier->config_file()))
+	{
+		# read the default config file ...
+		if (!&read_config_file($carrier->config_file()))
+		{
+			&log_error("can't read the configuration file '$config_file'");
+		}
+
+		$config_file = $carrier->config_file();
+
+		# ... and load the command line options again to overwrite defaults in config file
+		&process_command_line_options();
+	}
+
+	# set embedded options
+	if ($embedded == ON)
+	{
+		$| = OUTPUT_AUTOFLUSH_UNBUFFERED; 
+	}
+
+	# adjust the adjusted max length (with sig)
+	$single_max_length = $carrier->max_length() - length($signature);
+
+	# check that we have squeeze support, if requested
+	if ($squeeze_text == ON)
+	{
+		eval 'use Lingua::EN::Squeeze';
+
+		if ($@)
+		{
+			&log_fatal("cannot squeeze this message: $@");
+		}
+	}
+
+	if (!defined($username))
+	{
+		$username = &get_username();
+	}
+
+	# proxy setting up
+	if (defined($http_proxy))
+	{
+		$carrier->user_agent()->proxy('http', $http_proxy);
+
+		if (defined($https_proxy))
+		{
+			$carrier->user_agent()->proxy('https', $https_proxy);
+		}
+		else
+		{
+			$carrier->user_agent()->proxy('https', $http_proxy);
+		}
+	}
+
+	# do any other carrier setting up stuff
+	$carrier->debug($debug_level);
+	$carrier->dummy_send(!$debug_really_send);
+}
+
+sub process_recipients
+{
+	my @recips2;
+	my %recipients;
+	my $recip;
+
+	# explode groups
+	foreach $recip (@_)
+	{
+		if (ref($aliases{$recip}) eq 'ARRAY')
+		{
+			# is a group
+			push (@recips2, @{$aliases{$recip}});
+	 	}
+		else
+		{
+			# is something else
+			push (@recips2, $recip);
+		}
+	}
+
+	# convert aliases to numbers
+	for (my $i=0; $i<scalar(@recips2); $i++)
+	{
+		$recip = $recips2[$i];
+
+		if ($recip =~ /[^\d\+]/)
+		{
+			# has non-numeric character - might be alias
+			if (exists($aliases{$recip}))
+			{
+				my $number = $aliases{$recip};
+				$recipients{$number} = $recip;
+			}
+			else
+			{
+				&log_fatal("not a valid alias: '$recip'");
+			}
+		}
+		else
+		{
+			# a regular number
+			$recipients{$recip} = "";
+		} 
+	}
+
+	# ok -- format numbers how we like 'em
+	my %recipients2;
+
+	while (my ($number, $name) = each(%recipients))
+	{
+		# check number
+		my $valid_number = $carrier->validate_number($number);
+
+		&log_debug("changed $number to $valid_number");
+
+		if ($valid_number == -1)
+		{
+			&log_fatal($carrier->validate_number_error());
+		}
+
+		$recipients2{$valid_number} = $name;
+	}
+
+	return %recipients2;
+}
+
+sub t9ify
+{
+	my $message = $_[0];
+
+	$message =~ s/(^\w)/uc($1)/gsme;
+	$message =~ s/([\.\?\!:\\]\s*)(\w)/$1 . uc($2)/gsme;
+
+	return $message;
+}
+
+sub process_message
+{
+	my $message = $_[0];
+	my @message_parts;
+
+	# kill the last new line
+	chomp($message);
+
+	# make other newlines spaces
+	# TODO make this configurable?
+	#$message =~ s/\n/ /gsm;
+
+	# if wanted, use Lingua::EN::Squeeze to squeeze text
+	if ($squeeze_text == ON)
+	{
+		my $prelength = length($message);
+		$message = SqueezeText($message);
+
+		&log_debug("squeezed message (" . int(length($message)/$prelength*100) . "% compression): $message");
+	}
+	elsif ($emulate_t9 == ON)
+	{ 
+		# capitalise first letter of every sentence 
+		$message = &t9ify($message);
+	}
+
+	#$message =~ s/^$man_delim//; # remove unneeded splitters
+	#$message =~ s/$man_delim$//; # remove unneeded splitters
+
+	# truncate message to maximum length
+	if (length($message) > $sms_max_length)
+	{
+		&log_warning("very long message, truncating to $sms_max_length chars");
+		$message = substr($message,0,$sms_max_length);
+	}
+
+	# check do we need to split up the message
+	if ((length($message) > $single_max_length) || ($message =~ /$man_delim/))
+	{
+	
+		if (($split_messages == OFF) && ($message !~ /$man_delim/))
+		{
+			&log_fatal("message is too long (" . length($message) . "/$single_max_length), exitting");
+		}
+
+		my $restmsg = $message;
+		my $partmsg;
+
+		while ((length($restmsg) > $single_max_length) || ($restmsg =~ /$man_delim/))
+		{
+			# if manual split, and message part can fit, then add the first bit and loop
+			if ($restmsg =~ /^(.*?)$man_delim(.*)/)
+			{
+				if (length($1) < $single_max_length)
+				{
+					$partmsg = $1;
+					$restmsg = $2;
+					push (@message_parts, $partmsg) if ($partmsg =~ /\S/);
+					next;
+				}
+			}
+
+			# if we don't want to split..
+			if ($split_messages == OFF)
+			{
+				&log_fatal("message part " . (scalar(@message_parts) + 1) . " is too long (" . length($restmsg) . "/$single_max_length), exitting");
+			}
+
+			# message too long, split at the most natural place
+			if ($hard_split == ON)
+			{
+				($partmsg, $restmsg) = &split_message_hard($single_max_length, $restmsg);
+			}
+			else
+			{
+				($partmsg, $restmsg) = &split_message($single_max_length, $restmsg);
+			}
+
+			push (@message_parts, $partmsg) if ($partmsg =~ /\S/);
+		}
+
+		push (@message_parts, $restmsg . $signature) if ($restmsg =~ /\S/);
+
+		&log_warning("long or split message, splitting into " . scalar(@message_parts) . " parts");
+	}
+	else
+	{
+		push (@message_parts, $message . $signature);
+	}
+
+	# fill the end of each message part with white spaces to clear the "free web text" ad
+	#foreach my $message_part (@message_parts)
+	#{
+	#	my $msg_fill = " " x ($single_max_length - length($message_part) + length($signature));
+	#	$message_part .= $msg_fill;
+	#}
+
+	return @message_parts;
+}
+
+#      # -- check return values
+#      if (defined($retval) && ($retval == -1)) {
+#        # unknown repsonse.
+#        print STDERR "[ message sending failed; unknown response from server ]\n";
+#	$failed = 1;
+#      } elsif ($retval == -2) {
+#	# message sent, but we don't know how many are left
+#        print "[ message$partmsg sent to $number, ? remaining this month ]\n";
+#      } elsif ($retval == 0) {
+#        # 0 messages left - probably failed sending
+#        print STDERR "[ message sending failed; malformed message or no messages remaining this month ]\n";
+#        $failed = 1;
+#      } elsif ($retval > 0) {
+#        # message send successful
+#        print "[ message$partmsg sent to $number, $retval remaining this month ]\n";
+#      } else {
+#        # unknown negative response
+#        print STDERR "[ message sending failed ]\n";
+#	$failed = 1;
+#      }
+
+# -- save alias
+sub save_aliases
+{
+	if (!(&is_interactive))
+	{
+		return;
+	}
+
+	while (my ($number, $name) = each(%recipients))
+	{
+		# TODO check if this number is already in aliases
+
+		if ($name eq "")
+		{
+			print $RL_OUT "[ create alias for '$number' with this name : ] ";
+
+			my $name4num = <STDIN>;
+
+			chomp($name4num);
+
+			# TODO improve this to loop until get alias name or not
+
+			if ($name4num eq '')
+			{
+			}
+			elsif ($name4num !~ /[\w\.\-\_]+/)
+			{
+				&log_fatal("invalid alias name '$name4num'");
+			}
+			elsif (exists($aliases{$name4num}))
+			{
+				&log_fatal("alias already exists");
+			}
+			elsif (open(ALIASFILE, ">>" . $config_file))
+			{
+				print ALIASFILE "\nalias $name4num $number";
+				close ALIASFILE;
+			}
+			else
+			{
+				&log_fatal("can't write to configuration file '$config_file'");
+			}
+		}
+	}
+}
+
+sub split_message
+{
+	my ($len, $message) = @_;
+
+	# split the message on a break between words..
+	# find the position of the last ' ' in the sentance
+	my $pos = index(reverse(substr($message,0, $len-3)), ' ');
+	$pos = $len - 3 - $pos;
+
+	# the part the message to send
+	my $partmessage = substr($message, 0, $pos-1);
+	# the remaining part of the message
+	my $restofmessage = substr($message, $pos);
+
+	return ($partmessage, $restofmessage);
+}
+
+sub split_message_hard
+{
+	my ($len, $message) = @_;
+
+	# the part the message to send
+	my $partmessage = substr($message, 0, $len);
+	# the remaining part of the message
+	my $restofmessage = substr($message, $len);
+
+	return ($partmessage, $restofmessage);
+}
+
+sub read_config_file
+{
+	# check file exists
+	if (!(-f $_[0]))
+	{
+		&log_error("not a valid file: " . $_[0]);
+
+		return 0;
+	}
+
+	# check config file isn't world readble
+	my $config_file_info = stat($_[0]);
+
+	if (($config_file_info->mode & 004) && ($^O ne 'MSWin32'))
+	{
+		&log_warning($_[0] . " is world readable");
+	}
+
+	# read the file
+	if (!(open(SMSCONF, $_[0])))
+	{
+		&log_error("can't open file $_[0]");
+
+		return 0;
+	}
+
+	&log_debug("reading config file " . $_[0]);
+
+	my @conf_args;
+
+	while (<SMSCONF>)
+	{
+		chomp();
+		next if (/^#/);
+
+		if (/^alias\s*([\w\.\-\_]*)\s*(\+?\d*)$/i)
+		{
+			$aliases{$1} = $2;
+			&log_debug("added alias for $1", 2);
+		}
+		elsif (/^alias\s*([\w\.\-\_]*)\s*([\w\d\s]*)/i)
+		{
+			my @group = split(/\s+/,$2);
+			@{$aliases{$1}} = @group;
+			&log_debug("added group for $1 (" . join(", ",@{$aliases{$1}}) . ")", 2);
+		}
+		elsif (/^([\w\-]+)\s*(.*)/)
+		{
+			my $key = $1;
+			my $value = $2;
+
+			&log_debug("added configuration option '$1'" . ($2?" = '$2'":""), 2);
+
+			push(@conf_args, "-$1");
+			push(@conf_args, $2) if ($2);
+		}
+	}
+
+	# use GetOptions to parse config file options, which are now in @conf_args
+
+	if (@conf_args)
+	{
+		my @old_ARGV = @ARGV;
+		@ARGV = @conf_args;
+		GetOptions(%options) or &log_warning("unknown configuration file option");
+		@ARGV = @old_ARGV;
+	}
+
+	close (SMSCONF);
+	return 1;
+}
+
+sub get_carrier
+{
+	# create and return a carrier object based on name in $_[0]
+
+	use WWW::SMS::IE::iesms;
+	use WWW::SMS::IE::o2sms;
+
+	return WWW::SMS::IE::o2sms->new;
+}
+
+sub is_interactive
+{
+	return ((-t STDIN) && (-t STDOUT) && ($embedded != ON));
+}
+
+sub prettyprint_recipients
+{
+	my %recipients = @_;
+	my $ret = "";
+
+	while (my ($number, $name) = each(%recipients))
+	{
+		if ($name ne "")
+		{
+			# is alias, print both
+			$ret .= "$name ($number) ";
+		}
+		else
+		{
+			# just number
+			$ret .= "$number ";
+		}
+	}
+
+	chop($ret);
+
+	return $ret;
+}
+
+sub migrate_settings
+{
+	return if ($^O eq 'MSWin32');
+
+	return if (!&is_interactive());
+	
+	return if (!defined$ENV{HOME});
+
+	return if (!(
+		(-f $ENV{HOME} . "/.o2smsrc") || 
+		(-f $ENV{HOME} . "/.vodasmsrc") ||
+		(-f $ENV{HOME} . "/.meteorsmsrc")
+		));
+
+	return if (!&yn_prompt("migrate v2 settings to v3 ?"));
+
+	if (-f $ENV{HOME} . "/.o2smsrc")
+	{
+		mkdir($ENV{HOME} . "/.o2sms", 0700);
+
+		rename($ENV{HOME} . "/.o2smsrc", $ENV{HOME} . "/.o2sms/config") &&
+		&log_info("Moved configuration file to '" . $ENV{HOME} . "/.o2sms/config'");
+	}
+
+	unlink($ENV{HOME} . "/.o2smsmsg");
+	unlink($ENV{HOME} . "/.o2smscookie");
+
+	if (-f $ENV{HOME} . "/.vodasmsrc")
+	{
+		mkdir($ENV{HOME} . "/.vodasms", 0700);
+
+		rename($ENV{HOME} . "/.vodasmsrc", $ENV{HOME} . "/.vodasms/config") &&
+		&log_info("Moved configuration file to '" . $ENV{HOME} . "/.vodasms/config'");
+	}
+
+	unlink($ENV{HOME} . "/.vodasmsmsg");
+	unlink($ENV{HOME} . "/.vodasmscookie");
+
+	if (-f $ENV{HOME} . "/.meteorsmsrc")
+	{
+		mkdir($ENV{HOME} . "/.meteorsms", 0700);
+
+		rename($ENV{HOME} . "/.meteorsmsrc", $ENV{HOME} . "/.meteorsms/config") &&
+		&log_info("Moved configuration file to '" . $ENV{HOME} . "/.meteorsms/config'");
+	}
+
+	unlink($ENV{HOME} . "/.meteorsmsmsg");
+	unlink($ENV{HOME} . "/.meteorsmscookie");
+}
+
+sub widdley_start
+{
+	&log_debug("starting widdley thread...", 2);
+
+	$widdley_thread = threads->new(\&widdley_run) if $widdley_enabled;
+	$widdley_on = 1;
+}
+
+sub widdley_stop
+{
+	&log_debug("stopping widdley thread...", 2);
+
+	$widdley_on = 0;
+	return if (!defined($widdley_thread));
+	$widdley_thread->join();
+	$widdley_thread->detach();
+	undef($widdley_thread);
+}
+
+sub widdley_run
+{
+	for (my $i=0; $i<$widdley_after; $i++)
+	{
+		sleep(1);
+
+		return if (!$widdley_on);
+	}
+
+	print " ";
+
+        while ($widdley_on)
+        {
+                my $char = shift(@widdley_anim);
+                push(@widdley_anim, $char);
+
+                print "\b$char";
+
+		# wait for 100ms
+                select(undef, undef, undef, 0.1);
+        }
+
+	print "\b";
+}
+
+sub read_message
+{
+	my $message;
+
+	if ($readline_support)
+	{
+		while (defined($_ = $term->readline('')))
+		{
+			last if (/^\.$/);
+			$message .= $_;
+			print $RL_OUT "\n";
+		}
+
+		$term->addhistory($message) if ($message =~ /\S/);
+	}
+	else
+	{
+		while (<STDIN>)
+		{
+			last if (/^\.$/);
+			$message .= $_;
+		}
+	}
+
+	return $message;
+}
+
+sub read_password
+{
+	if (!(&is_interactive()))
+	{
+		return "<undefined>";
+	}
+
+	my $password;
+
+	system "stty -echo"; # Echo off
+	print "Password: "; # Prompt for password
+	chomp($password = <STDIN>); # Remove newline
+	system "stty echo"; # Echo on
+	print "\n";
+
+	return $password;
+}
+
+sub yn_prompt
+{
+	return undef if (!is_interactive());
+
+	my $prompt = $_[0];
+
+	print $RL_OUT "[ $prompt y/n [n] : ] ";
+
+	my $resp = <STDIN>;
+
+	return (defined($resp) && ($resp =~ /^y/i));
+}
+
+sub log_debug
+{
+	if (!defined($_[1]))
+	{
+		$_[1] = 1;
+	}
+
+	if ($debug_level >= $_[1])
+	{
+		print "iesms: $_[0]\n";
+	}
+}
+
+sub log_info
+{
+	print $RL_OUT "[ $_[0] " unless (!defined($_[0]));
+	print $RL_OUT "]\n" unless $_[1];
+}
+
+sub log_error
+{
+	print STDERR "[ $_[0] ]\n";
+}
+
+sub log_fatal
+{
+	print STDERR "[ $_[0] ]\n" if ($_[0]);
+	exit(EXIT_FAILURE);
+}
+
+sub log_warning
+{
+	print STDERR "[ warning: $_[0] ]\n";
+}
+
+sub fade_away
+{
+	&widdley_stop();
+
+	&log_info("okay, I'm outta here.");
+	exit(EXIT_SUCCESS);  
+}
+
+__END__
+
+=head1 SYNOPSIS
+
+o2sms [options] <number|alias|group> [<number|alias|group> ...]
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-u, --username=STRING>
+
+Use this username (defaults to unix username)
+
+=item B<-p, --password=STRING>
+
+Use this password (it omitted, will prompt for password)
+
+=item B<-c, --config-file=FILE>
+
+Use this configuration file (defaults to ~/.o2sms/config)
+
+=item B<-r, --reuse-cookies>
+
+Reuse cookies if possible (the default)
+
+=item B<-s, --split-messages>
+
+Allow message to be split in multiple SMSs (the default)
+
+=item B<-k, --hard-split>
+
+Allow message to be split in the middle of a word
+
+=item B<-z, --squeeze-text>
+
+Squeezes text (e.g. mak txt msg as smal as psble)
+
+=item B<-t9, --emulate-t9>
+
+Emulate t9 behaviour
+
+=item B<-P, --http-proxy=URL>
+
+Use this HTTP proxy (defaults to the HTTP_PROXY environment variable, if present)
+
+=item B<--https-proxy=URL>
+
+Use this HTTPS proxy (defaults to the HTTP proxy or HTTPS_PROXY environment variable, if present)
+
+=item B<-s, --sig=STRING>
+
+Append this text to every message
+
+=item B<-C, --carrier=NAME>
+
+Force the carrier to be this ("o2", "vodafone" or "meteor")
+
+=item B<-m, --message=STRING>
+
+Don't wait for STDIN, send this message
+
+=item B<--embedded>
+
+Embedded mode, turn off input and output
+
+=item B<-v, --version>
+
+Print version and exits
+
+=item B<-h, --help>
+
+Prints this help message and exits
+
+=item B<-d, --debug>
+
+Debug mode (use twice for more verbose output)
+
+=back
+
+=head1 CONFIGURATION FILE
+
+TODO
+
+=head1 SEE ALSO
+
+L<WWW::SMS::IE::iesms>,
+L<WWW::SMS::IE::o2sms>,
+L<WWW::SMS::IE::vodasms>,
+L<WWW::SMS::IE::meteorsms> 
+
+L<http://www.mackers.com/projects/o2sms/>
+
+=head1 AUTHOR
+
+David McNamara (me.at.mackers.dot.com) et al
+
+=head1 COPYRIGHT
+
+Copyright 2000-2006 David McNamara
+
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+=cut
+
