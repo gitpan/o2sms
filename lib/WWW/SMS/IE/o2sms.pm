@@ -1,11 +1,11 @@
 #
-# $Id: o2sms.pm 158 2006-02-27 15:09:53Z mackers $
+# $Id: o2sms.pm 161 2006-02-28 13:07:37Z mackers $
 
 package WWW::SMS::IE::o2sms;
 
 =head1 NAME
 
-WWW::SMS::IE::o2sms - A module to send SMS messagae using the website of 
+WWW::SMS::IE::o2sms - A module to send SMS messages using the website of 
 O2 Ireland
 
 =head1 SYNOPSIS

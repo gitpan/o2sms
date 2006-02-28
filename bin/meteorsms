@@ -20,6 +20,7 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
+$VERSION = '3.01'; 
 
 # -- modules
 use File::stat;
@@ -41,8 +42,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 159 2006-02-27 15:29:50Z mackers $';
-$VERSION = '3.00'; 
+my $svnid = '$Id: o2sms 163 2006-02-28 13:13:47Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -65,7 +65,7 @@ my $squeeze_text = OFF;
 my $debug_really_send = ON;
 my $debug_level = 0;
 my $readline_support = 1;
-my $widdley_enabled = 1;
+my $widdley_enabled = 0;
 
 my $term;
 my $carrier;
@@ -75,8 +75,8 @@ my $message_whole;
 my %aliases;
 my $RL_OUT;
 
-#my @widdley_anim = qw"- \ | /";
-my @widdley_anim = qw". o O o";
+my @widdley_anim = qw"- \ | /";
+#my @widdley_anim = qw". o O o";
 my $widdley_after = 8;
 my $widdley_on : shared = 0;
 my $widdley_thread;
@@ -836,6 +836,9 @@ sub migrate_settings
 
 sub widdley_start
 {
+	return unless ($widdley_enabled);
+	return unless (&is_interactive());
+
 	&log_debug("starting widdley thread...", 2);
 
 	$widdley_thread = threads->new(\&widdley_run) if $widdley_enabled;
@@ -844,12 +847,15 @@ sub widdley_start
 
 sub widdley_stop
 {
+	return unless ($widdley_enabled);
+	return unless (&is_interactive());
+
 	&log_debug("stopping widdley thread...", 2);
 
 	$widdley_on = 0;
 	return if (!defined($widdley_thread));
 	$widdley_thread->join();
-	$widdley_thread->detach();
+	#$widdley_thread->detach();
 	undef($widdley_thread);
 }
 

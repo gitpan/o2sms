@@ -5,7 +5,7 @@ package WWW::SMS::IE::meteorsms;
 
 =head1 NAME
 
-WWW::SMS::IE::meteorsms - A module to send SMS messagae using the website of 
+WWW::SMS::IE::meteorsms - A module to send SMS messages using the website of 
 Meteor Ireland
 
 =head1 SYNOPSIS

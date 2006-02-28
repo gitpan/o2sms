@@ -1,11 +1,11 @@
 #
-# $Id: vodasms.pm 158 2006-02-27 15:09:53Z mackers $
+# $Id: vodasms.pm 161 2006-02-28 13:07:37Z mackers $
 
 package WWW::SMS::IE::vodasms;
 
 =head1 NAME
 
-WWW::SMS::IE::vodasms - A module to send SMS messagae using the website of 
+WWW::SMS::IE::vodasms - A module to send SMS messages using the website of 
 Vodafone Ireland
 
 =head1 SYNOPSIS
