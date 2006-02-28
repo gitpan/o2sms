@@ -20,7 +20,7 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = '3.01'; 
+$VERSION = '3.04'; 
 
 # -- modules
 use File::stat;
@@ -42,7 +42,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 163 2006-02-28 13:13:47Z mackers $';
+my $svnid = '$Id: o2sms 167 2006-02-28 17:04:53Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -115,6 +115,7 @@ $SIG{INT} = \&fade_away;
 
 if (($readline_support) && ($^O ne 'darwin') && ($term = new Term::ReadLine $carrier->full_name()))
 {
+	$term->ornaments(0);
 	$RL_OUT = $term->OUT || \*STDOUT;
 	&log_debug("ReadLine support enabled");
 }
@@ -165,7 +166,7 @@ if ($carrier->is_logged_in() && ($reuse_cookies == ON))
 }
 else
 {
-	&log_info("logging in to $username\@" . $carrier->domain_name() . " ...", 1);
+	&log_info("logging in to $username\@" . $carrier->domain_name() . " ...");
 
 	# -- get a password
 	if (!defined($password))
@@ -178,8 +179,8 @@ else
 
 	my $retval = $carrier->login($username, $password);
 
+	# -- stop the widdley
 	&widdley_stop();
-	print "]\n";
 
 	if ($retval)
 	{
@@ -894,7 +895,6 @@ sub read_message
 		{
 			last if (/^\.$/);
 			$message .= $_;
-			print $RL_OUT "\n";
 		}
 
 		$term->addhistory($message) if ($message =~ /\S/);
@@ -921,7 +921,7 @@ sub read_password
 	my $password;
 
 	system "stty -echo"; # Echo off
-	print "Password: "; # Prompt for password
+	print $RL_OUT "[ password : ] "; # Prompt for password
 	chomp($password = <STDIN>); # Remove newline
 	system "stty echo"; # Echo on
 	print "\n";
@@ -980,6 +980,8 @@ sub log_warning
 sub fade_away
 {
 	&widdley_stop();
+
+	system "stty echo"; # Echo on if cancel during a password read
 
 	&log_info("okay, I'm outta here.");
 	exit(EXIT_SUCCESS);  

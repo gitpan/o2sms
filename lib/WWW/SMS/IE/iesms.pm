@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 158 2006-02-27 15:09:53Z mackers $
+# $Id: iesms.pm 165 2006-02-28 16:55:14Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,6 +51,7 @@ The following methods are available:
 use TestGen4Web::Runner;
 use File::stat;
 use Storable;
+use File::Basename;
 
 use strict;
 use warnings;
@@ -451,6 +452,9 @@ sub cookie_file
 {
 	if (defined($_[1]))
 	{
+		my ($filename, $directories, $suffix) = fileparse($_[1]);
+		mkdir ($directories, 0777) unless (-d $directories);
+	
 		$_[0]->{cookie_jar} = $_[1];
 		$_[0]->{tg4w_runner}->cookie_jar($_[1]);
 	}
