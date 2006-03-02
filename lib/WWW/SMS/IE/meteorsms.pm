@@ -35,6 +35,8 @@ For more information see L<WWW::SMS::IE::iesms>
 
 use strict;
 use warnings;
+use vars qw( $VERSION );
+$VERSION = '0.01'; 
 
 @WWW::SMS::IE::meteorsms::ISA = qw{WWW::SMS::IE::iesms};
 

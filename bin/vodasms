@@ -20,7 +20,7 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = '3.04'; 
+$VERSION = '3.05'; 
 
 # -- modules
 use File::stat;
@@ -42,7 +42,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 167 2006-02-28 17:04:53Z mackers $';
+my $svnid = '$Id: o2sms 174 2006-03-02 11:48:19Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -611,7 +611,7 @@ sub save_aliases
 	{
 		# TODO check if this number is already in aliases
 
-		if ($name eq "")
+		while ($name eq "")
 		{
 			print $RL_OUT "[ create alias for '$number' with this name : ] ";
 
@@ -619,23 +619,23 @@ sub save_aliases
 
 			chomp($name4num);
 
-			# TODO improve this to loop until get alias name or not
-
-			if ($name4num eq '')
+			if ($name4num !~ /\S/)
 			{
+				last;
 			}
 			elsif ($name4num !~ /[\w\.\-\_]+/)
 			{
-				&log_fatal("invalid alias name '$name4num'");
+				&log_error("invalid alias name '$name4num'");
 			}
 			elsif (exists($aliases{$name4num}))
 			{
-				&log_fatal("alias already exists");
+				&log_error("alias already exists");
 			}
 			elsif (open(ALIASFILE, ">>" . $config_file))
 			{
 				print ALIASFILE "\nalias $name4num $number";
 				close ALIASFILE;
+				last;
 			}
 			else
 			{
@@ -749,11 +749,24 @@ sub read_config_file
 sub get_carrier
 {
 	# create and return a carrier object based on name in $_[0]
-
 	use WWW::SMS::IE::iesms;
-	use WWW::SMS::IE::o2sms;
 
-	return WWW::SMS::IE::o2sms->new;
+	if ($_[0] eq "meteor")
+	{
+		use WWW::SMS::IE::meteorsms;
+		return WWW::SMS::IE::meteorsms->new;
+	}
+	elsif ($_[0] eq "vodafone")
+	{
+		use WWW::SMS::IE::vodasms;
+		return WWW::SMS::IE::vodasms->new;
+	}
+	else
+	{
+		use WWW::SMS::IE::o2sms;
+		return WWW::SMS::IE::o2sms->new;
+	}
+
 }
 
 sub is_interactive
@@ -1069,7 +1082,24 @@ Debug mode (use twice for more verbose output)
 
 =head1 CONFIGURATION FILE
 
-TODO
+Configuration is in the file C<~/.o2sms/config> (or C<~/.vodasms/config> or
+C<~/.meteorsms/config>) or can be overwritten with the -c / --config-file
+command line option.
+
+Values in this file are stored as one per line and take the same name and
+format as their command line equivalents.
+
+The one exception to this is the 'alias' setting, which defines a named alias
+for one number (a straight alias) or more than one number (a group).
+
+Configuration file example:
+
+  username frankc
+  password mong0l0id
+  nosplit
+  alias mammy +353865551234
+  alias beerpeople +353865550000 +353865550001 +353865550002
+  # a comment
 
 =head1 SEE ALSO
 

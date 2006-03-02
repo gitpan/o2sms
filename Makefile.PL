@@ -17,3 +17,29 @@ WriteMakefile(
 	},
 	dist		=> { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
 );
+
+sub MY::postamble {
+	return <<'MAKE_FRAG';
+
+cpanupload: 
+	echo "Going to upload " `ls -1t *.tar.gz | head -1`
+	/usr/bin/cpan-upload -user mackers -mailto me@mackers.com -verbose `ls -1t *.tar.gz | head -1`
+
+debuild: META.yml
+	mkdir /tmp/debuild-o2sms/
+	cp `ls -1t *.tar.gz | head -1` /tmp/debuild-o2sms/
+	cd /tmp/debuild-o2sms/ && tar -zxvf *.tar.gz
+	rm /tmp/debuild-o2sms/*.tar.gz
+	cp -R debian /tmp/debuild-o2sms/o2sms*
+	cd /tmp/debuild-o2sms/o2sms* && debuild
+	rm -rf /tmp/debuild-o2sms/o2sms-*
+	mv /tmp/debuild-o2sms/* ./debuild/
+	rmdir /tmp/debuild-o2sms/
+
+debupload:
+	echo "Going to upload" `ls -1t debuild/*.changes | head -1`
+	/usr/bin/reprepro -Vb /var/www/hosts/apt.mackers.com/htdocs/ include unstable `ls -1t debuild/*.changes | head -1` 
+
+MAKE_FRAG
+}
+

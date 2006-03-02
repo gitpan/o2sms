@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 165 2006-02-28 16:55:14Z mackers $
+# $Id: iesms.pm 173 2006-03-01 19:52:41Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -48,13 +48,15 @@ The following methods are available:
 
 =cut
 
+use strict;
+use warnings;
+use vars qw( $VERSION );
+$VERSION = '0.01'; 
+
 use TestGen4Web::Runner;
 use File::stat;
 use Storable;
 use File::Basename;
-
-use strict;
-use warnings;
 
 use constant LOGIN_LIFETIME => 60 * 30;
 use constant TG4W_VERIFY_TITLES => 0;

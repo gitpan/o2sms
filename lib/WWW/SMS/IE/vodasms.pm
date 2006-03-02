@@ -1,5 +1,5 @@
 #
-# $Id: vodasms.pm 161 2006-02-28 13:07:37Z mackers $
+# $Id: vodasms.pm 173 2006-03-01 19:52:41Z mackers $
 
 package WWW::SMS::IE::vodasms;
 
@@ -35,6 +35,8 @@ For more information see L<WWW::SMS::IE::iesms>
 
 use strict;
 use warnings;
+use vars qw( $VERSION );
+$VERSION = '0.01'; 
 
 @WWW::SMS::IE::vodasms::ISA = qw{WWW::SMS::IE::iesms};
 
