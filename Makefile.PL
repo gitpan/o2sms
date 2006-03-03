@@ -43,13 +43,13 @@ debupload:
 	/usr/bin/reprepro -Vb /var/www/hosts/apt.mackers.com/htdocs/ include unstable `ls -1t debuild/*.changes | head -1` 
 
 release:
-	/usr/bin/pod2html -title o2sms -htmlroot /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/ bin/o2sms  > usage.html
-	/usr/bin/pod2html -title WWW::SMS::IE::iesms -htmlroot /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/ lib/WWW/SMS/IE/iesms.pm > WWW/SMS/IE/iesms.html
-	/usr/bin/pod2html -title WWW::SMS::IE::o2sms -htmlroot /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/ lib/WWW/SMS/IE/o2sms.pm > WWW/SMS/IE/o2sms.html
-	/usr/bin/pod2html -title WWW::SMS::IE::vodasms -htmlroot /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/ lib/WWW/SMS/IE/vodasms.pm > WWW/SMS/IE/vodasms.html
-	/usr/bin/pod2html -title WWW::SMS::IE::meteorsms -htmlroot /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/ lib/WWW/SMS/IE/meteorsms.pm > WWW/SMS/IE/meteorsms.html
+	/usr/bin/pod2html -title o2sms -htmlroot . bin/o2sms  > /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/docs/v3/usage.html
+	/usr/bin/pod2html -title WWW::SMS::IE::iesms -htmlroot . lib/WWW/SMS/IE/iesms.pm > /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/docs/v3/WWW/SMS/IE/iesms.html
+	/usr/bin/pod2html -title WWW::SMS::IE::o2sms -htmlroot . lib/WWW/SMS/IE/o2sms.pm > /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/docs/v3/WWW/SMS/IE/o2sms.html
+	/usr/bin/pod2html -title WWW::SMS::IE::vodasms -htmlroot . lib/WWW/SMS/IE/vodasms.pm > /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/docs/v3/WWW/SMS/IE/vodasms.html
+	/usr/bin/pod2html -title WWW::SMS::IE::meteorsms -htmlroot . lib/WWW/SMS/IE/meteorsms.pm > /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/docs/v3/WWW/SMS/IE/meteorsms.html
 	find . -name '*.tmp' | xargs rm
-	cp `ls -1t *.tar.gz | head -1` /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/
+	cp `ls -1t *.tar.gz | head -1` /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/releases/
 
 MAKE_FRAG
 }
