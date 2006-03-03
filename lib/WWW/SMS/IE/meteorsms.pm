@@ -1,5 +1,5 @@
 #
-# $Id: meteorsms.pm 136 2006-02-21 12:45:16Z mackers $
+# $Id: meteorsms.pm 179 2006-03-02 14:00:49Z mackers $
 
 package WWW::SMS::IE::meteorsms;
 
@@ -36,7 +36,7 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = '0.01'; 
+$VERSION = sprintf("0.%02d", q$Revision: 179 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::meteorsms::ISA = qw{WWW::SMS::IE::iesms};
 

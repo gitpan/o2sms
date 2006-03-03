@@ -1,5 +1,9 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.06		2006-03-03
+
+		Bug fix in v2 -> v3 migration.
+
 3.05		2006-03-02
 
 		Improved auto-aliasing. Config file documentation.

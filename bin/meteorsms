@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+# $Id: o2sms 182 2006-03-03 12:27:45Z mackers $
 
 =head1 o2sms
 
@@ -20,7 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = '3.05'; 
+#$VERSION = sprintf("3.%02d", q$Revision: 182 $ =~ /(\d+)/);
+$VERSION = '3.06';
 
 # -- modules
 use File::stat;
@@ -42,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 174 2006-03-02 11:48:19Z mackers $';
+my $svnid = '$Id: o2sms 182 2006-03-03 12:27:45Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -104,13 +106,6 @@ my %options = (
 
 $SIG{INT} = \&fade_away;
 
-# -- migrate v2.x settings to v3
-&migrate_settings();
-
-# -- load config (and set up $carrier)
-
-&load_configuration();
-
 # -- initialise readline
 
 if (($readline_support) && ($^O ne 'darwin') && ($term = new Term::ReadLine $carrier->full_name()))
@@ -126,6 +121,13 @@ else
 	$readline_support = 0;
 	&log_debug("ReadLine support disabled");
 }
+
+# -- migrate v2.x settings to v3
+&migrate_settings();
+
+# -- load config (and set up $carrier)
+
+&load_configuration();
 
 # -- process recipients
 
@@ -1004,7 +1006,7 @@ __END__
 
 =head1 SYNOPSIS
 
-o2sms [options] <number|alias|group> [<number|alias|group> ...]
+  o2sms [options] <number|alias|group> [<number|alias|group> ...]
 
 =head1 OPTIONS
 
