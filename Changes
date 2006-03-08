@@ -1,5 +1,11 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.08		2006-08-08
+
+		Minimum required for URI module is version 1.26.
+		Workaround for bug in LWP::UserAgent using HTTPS proxies.
+		-version
+
 3.07		2006-03-03
 
 		Fixed bug introduced by 3.06.

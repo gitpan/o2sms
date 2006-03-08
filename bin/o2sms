@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 186 2006-03-03 12:58:03Z mackers $
+# $Id: o2sms 192 2006-03-08 16:34:42Z mackers $
 
 =head1 o2sms
 
@@ -21,8 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 186 $ =~ /(\d+)/);
-$VERSION = '3.07';
+#$VERSION = sprintf("3.%02d", q$Revision: 192 $ =~ /(\d+)/);
+$VERSION = '3.08';
 
 # -- modules
 use File::stat;
@@ -44,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 186 2006-03-03 12:58:03Z mackers $';
+my $svnid = '$Id: o2sms 192 2006-03-08 16:34:42Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -98,7 +98,7 @@ my %options = (
 	"hard-split|k!"	=> \$hard_split,
 	"emulate-t9|t9!"	=> \$emulate_t9,
 	"squeeze-text|squeeze|z!"	=> \$squeeze_text,
-	"version|v"	=> sub { &print_version_and_exit(0) },
+	#"version|v"	=> sub { &print_version_and_exit(0) },
 	"help|usage|h"	=> sub { &print_usage_and_exit(0) },
 	"debug|verbose|d|V+"	=> \$debug_level,
 	"send!"	=> \$debug_really_send,
@@ -246,22 +246,6 @@ exit(0);
 
 # -- subs
 
-sub get_http_proxy
-{
-	my $http_proxy;
-
-	if (defined($ENV{HTTPS_PROXY}))
-	{
-		$http_proxy = $ENV{HTTPS_PROXY};
-	}
-	else
-	{
-		$http_proxy = $ENV{HTTP_PROXY};
-	}
-
-	return $http_proxy;
-}
-
 sub guess_carrier_name
 {
 	if ($0 =~ /voda(fone)?sms(\.pl)?$/i)
@@ -297,16 +281,17 @@ sub print_usage_and_exit
 	pod2usage(-exitval => $_[0], -verbose => 1);
 }
 
-sub print_version_and_exit
-{
-	print "$0 version $VERSION\n";
-	exit($_[0]);
-}
+#sub print_version_and_exit
+#{
+#	print "$0 version $VERSION\n";
+#	exit($_[0]);
+#}
 
 sub process_command_line_options
 {
 	Getopt::Long::Configure("bundling_override");
 	Getopt::Long::Configure("prefix_pattern=(-|--)");
+	Getopt::Long::Configure("auto_version");
 
 	GetOptions(%options) or &print_usage_and_exit(1);
 	# recipents are now in $ARGV
@@ -388,13 +373,18 @@ sub load_configuration
 	{
 		$carrier->user_agent()->proxy('http', $http_proxy);
 
+		# work around bug for LWP::UserAgent HTTPS proxy support
+		$carrier->user_agent()->proxy('https', undef);
+
 		if (defined($https_proxy))
 		{
-			$carrier->user_agent()->proxy('https', $https_proxy);
+			$ENV{'https_proxy'} = $https_proxy;
+			#$carrier->user_agent()->proxy('https', $https_proxy);
 		}
 		else
 		{
-			$carrier->user_agent()->proxy('https', $http_proxy);
+			$ENV{'https_proxy'} = $http_proxy;
+			#$carrier->user_agent()->proxy('https', $http_proxy);
 		}
 	}
 
@@ -1068,10 +1058,6 @@ Don't wait for STDIN, send this message
 
 Embedded mode, turn off input and output
 
-=item B<-v, --version>
-
-Print version and exits
-
 =item B<-h, --help>
 
 Prints this help message and exits
@@ -1079,6 +1065,10 @@ Prints this help message and exits
 =item B<-d, --debug>
 
 Debug mode (use twice for more verbose output)
+
+=item B<-version>
+
+Print version and exits
 
 =back
 

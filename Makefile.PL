@@ -14,6 +14,7 @@ WriteMakefile(
 		IO::Socket::SSL		=> 0,
 		Net::SSLeay		=> 0,
 		Crypt::SSLeay		=> 0,
+		URI			=> 1.26,
 	},
 	dist		=> { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
 );
@@ -21,12 +22,12 @@ WriteMakefile(
 sub MY::postamble {
 	return <<'MAKE_FRAG';
 
-cpanupload: 
+publish-cpan: dist 
 	echo "Going to upload " `ls -1t *.tar.gz | head -1`
 	sleep 2
 	/usr/bin/cpan-upload -user mackers -mailto me@mackers.com -verbose `ls -1t *.tar.gz | head -1`
 
-debuild: META.yml
+debuild: META.yml dist
 	mkdir /tmp/debuild-o2sms/
 	cp `ls -1t *.tar.gz | head -1` /tmp/debuild-o2sms/
 	cd /tmp/debuild-o2sms/ && tar -zxvf *.tar.gz
@@ -37,12 +38,12 @@ debuild: META.yml
 	mv /tmp/debuild-o2sms/* ./debuild/
 	rmdir /tmp/debuild-o2sms/
 
-debupload:
+publish-debian: dist debuild
 	echo "Going to upload" `ls -1t debuild/*.changes | head -1`
 	sleep 2
 	/usr/bin/reprepro -Vb /var/www/hosts/apt.mackers.com/htdocs/ include unstable `ls -1t debuild/*.changes | head -1` 
 
-release:
+publish-mackers.com: dist
 	/usr/bin/pod2html -title o2sms -htmlroot . bin/o2sms  > /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/docs/v3/usage.html
 	/usr/bin/pod2html -title WWW::SMS::IE::iesms -htmlroot . lib/WWW/SMS/IE/iesms.pm > /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/docs/v3/WWW/SMS/IE/iesms.html
 	/usr/bin/pod2html -title WWW::SMS::IE::o2sms -htmlroot . lib/WWW/SMS/IE/o2sms.pm > /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/docs/v3/WWW/SMS/IE/o2sms.html

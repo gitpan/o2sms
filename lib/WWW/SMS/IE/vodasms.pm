@@ -1,5 +1,5 @@
 #
-# $Id: vodasms.pm 179 2006-03-02 14:00:49Z mackers $
+# $Id: vodasms.pm 187 2006-03-03 14:38:05Z mackers $
 
 package WWW::SMS::IE::vodasms;
 
@@ -36,7 +36,7 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 179 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 187 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::vodasms::ISA = qw{WWW::SMS::IE::iesms};
 
@@ -45,7 +45,7 @@ use constant LOGIN_END_STEP => 7;
 use constant SEND_START_STEP => 8;
 use constant SEND_END_STEP => undef;
 use constant REMAINING_MESSAGES_MATCH => 1;
-use constant ACTION_FILE => "vodafone.action";
+use constant ACTION_FILE => "vodasms.action";
 use constant SIMULATED_DELAY_MIN => 10;
 use constant SIMULATED_DELAY_MAX => 35;
 use constant SIMULATED_DELAY_PERCHAR => 0.25;
@@ -68,7 +68,7 @@ sub _init
 
 	$self->full_name("Vodafone Ireland");
 	$self->domain_name("vodafone.ie");
-	$self->config_dir($self->_get_home_dir() . "/.vodafonesms/");
+	$self->config_dir($self->_get_home_dir() . "/.vodasms/");
 	$self->config_file($self->config_dir() . "config");
 	$self->message_file($self->config_dir() . "lastmsg");
 	$self->cookie_file($self->config_dir() . ".cookie");
