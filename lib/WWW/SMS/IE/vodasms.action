@@ -1,4 +1,68 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <tg4w version="0.38.1">
-<!-- TODO -->
+    <actions>
+        <action type="goto" refresh="true" step="0">
+            <xpath><![CDATA[window.location.href]]></xpath>
+            <value><![CDATA[http://www.vodafone.ie/]]></value>
+        </action>
+        <action type="verify-title" step="1">
+            <xpath><![CDATA[*]]></xpath>
+            <value><![CDATA[Mobile Phone Offers, Mobile Phones And Vodafone Ringtones - Vodafone, Ireland]]></value>
+        </action>
+        <action type="fill" step="2">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="username"]]]></xpath>
+	    <value><![CDATA[{username}]]></value>
+        </action>
+        <action type="fill" step="3">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="password"]]]></xpath>
+	    <value><![CDATA[{password}]]></value>
+        </action>
+        <action type="click" refresh="true" step="4">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[@TYPE="image" and @VALUE=""]]]></xpath>
+            <value><![CDATA[null]]></value>
+        </action>
+        <action type="assert-text-exists" step="5">
+            <xpath><![CDATA[*]]></xpath>
+            <value><![CDATA[Personalise message]]></value>
+        </action>
+	<action type="verify-title" step="6">
+            <xpath><![CDATA[*]]></xpath>
+            <value><![CDATA[My Vodafone - Vodafone Ireland]]></value>
+        </action>
+        <action type="click" refresh="true" step="7">
+            <xpath><![CDATA[*/TABLE[1]/TBODY[1]/TR[1]/TD[1]/TABLE[9]/TBODY[1]/TR[1]/TD[4]/TABLE[1]/TBODY[1]/TR[1]/TD[1]/TABLE[2]/TBODY[1]/TR[1]/TD[2]/TABLE[1]/TBODY[1]/TR[9]/TD[2]/*/A[@CDATA="Web texts:"]]]></xpath>
+            <value><![CDATA[]]></value>
+        </action>
+        <action type="fill" step="8">
+            <xpath><![CDATA[*/FORM[2]/*/TEXTAREA[1]]]></xpath>
+	    <value><![CDATA[{message}]]></value>
+        </action>
+        <action type="fill" step="9">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[2]]]></xpath>
+            <value><![CDATA[{charsleft}]]></value>
+        </action>
+	<action type="fill" step="10">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[3]]]></xpath>
+	    <value><![CDATA[{recipient}]]></value>
+        </action>
+        <action type="wait" step="11">
+		<value><![CDATA[{delay}]]></value>
+	</action>
+	<action type="click" refresh="true" step="12">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[@TYPE="image" and @VALUE=""]]]></xpath>
+            <value><![CDATA[null]]></value>
+        </action>
+        <action type="assert-text-exists" step="13">
+            <xpath><![CDATA[*]]></xpath>
+            <value><![CDATA[Send Another Message]]></value>
+        </action>
+        <action type="click" refresh="true" step="14">
+            <xpath><![CDATA[*/TABLE[1]/TBODY[1]/TR[1]/TD[1]/TABLE[9]/TBODY[1]/TR[1]/TD[4]/TABLE[2]/TBODY[1]/TR[1]/TD[1]/TABLE[4]/TBODY[1]/TR[1]/TD[1]/A[1]]]></xpath>
+            <value><![CDATA[]]></value>
+        </action>
+        <action type="assert-text-exists" step="15">
+            <xpath><![CDATA[*]]></xpath>
+            <value><![CDATA[Messages Remaining\s*(\d+)]]></value>
+        </action>
+    </actions>
 </tg4w>

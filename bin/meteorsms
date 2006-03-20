@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 192 2006-03-08 16:34:42Z mackers $
+# $Id: o2sms 209 2006-03-20 16:02:37Z mackers $
 
 =head1 o2sms
 
@@ -21,8 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 192 $ =~ /(\d+)/);
-$VERSION = '3.08';
+#$VERSION = sprintf("3.%02d", q$Revision: 209 $ =~ /(\d+)/);
+$VERSION = '3.09';
 
 # -- modules
 use File::stat;
@@ -44,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 192 2006-03-08 16:34:42Z mackers $';
+my $svnid = '$Id: o2sms 209 2006-03-20 16:02:37Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -66,7 +66,7 @@ my $emulate_t9 = OFF;
 my $squeeze_text = OFF;
 my $debug_really_send = ON;
 my $debug_level = 0;
-my $readline_support = 1;
+my $readline_support = 0;
 my $widdley_enabled = 0;
 
 my $term;
@@ -86,7 +86,7 @@ my $widdley_thread;
 my %options = (
 	"username|u=s"	=> \$username,
 	"password|p=s"	=> \$password,
-	"message|m=s"	=> \$message,
+	"message|m=s"	=> \$message_whole,
 	"sig|s=s"	=> \$signature,
 	"config-file|c=s" => \$config_file,
 	"http-proxy|proxy|P=s"	=> \$http_proxy,
@@ -110,8 +110,8 @@ $SIG{INT} = \&fade_away;
 &migrate_settings();
 
 # -- load config (and set up $carrier)
-
 &load_configuration();
+&log_debug("$0 version $VERSION");
 
 # -- initialise readline
 
@@ -162,7 +162,7 @@ if (scalar(@message_parts) == 0)
 
 # -- login and send the message
 
-if ($carrier->is_logged_in() && ($reuse_cookies == ON))
+if (($reuse_cookies == ON) && $carrier->is_logged_in())
 {
 	&log_info("reusing last login for $username\@" . $carrier->domain_name() . " ...");
 }
@@ -290,7 +290,7 @@ sub print_usage_and_exit
 sub process_command_line_options
 {
 	Getopt::Long::Configure("bundling_override");
-	Getopt::Long::Configure("prefix_pattern=(-|--)");
+	#Getopt::Long::Configure("prefix_pattern=(-|--)");
 	Getopt::Long::Configure("auto_version");
 
 	GetOptions(%options) or &print_usage_and_exit(1);
@@ -414,7 +414,7 @@ sub process_recipients
 		}
 	}
 
-	# convert aliases to numbers
+	# convert aliases to numbers and numbers to aliases
 	for (my $i=0; $i<scalar(@recips2); $i++)
 	{
 		$recip = $recips2[$i];
@@ -434,8 +434,20 @@ sub process_recipients
 		}
 		else
 		{
+			my $recip_name = "";
+
+			# user provided number -- alias might exist
+			while (my ($name, $number) = each(%aliases))
+			{
+				if ($recip == $number)
+				{
+					$recip_name = $name;
+					last;
+				}
+			}
+
 			# a regular number
-			$recipients{$recip} = "";
+			$recipients{$recip} = $recip_name;
 		} 
 	}
 
@@ -445,16 +457,19 @@ sub process_recipients
 	while (my ($number, $name) = each(%recipients))
 	{
 		# check number
-		my $valid_number = $carrier->validate_number($number);
+		my $std_number = $carrier->validate_number($number);
 
-		&log_debug("changed $number to $valid_number");
-
-		if ($valid_number == -1)
+		if ($std_number == -1)
 		{
 			&log_fatal($carrier->validate_number_error());
 		}
 
-		$recipients2{$valid_number} = $name;
+		if ($number ne $std_number)
+		{
+			&log_debug("changed $number to $std_number");
+		}
+
+		$recipients2{$std_number} = $name;
 	}
 
 	return %recipients2;
@@ -599,11 +614,17 @@ sub save_aliases
 		return;
 	}
 
-	while (my ($number, $name) = each(%recipients))
+	RECIPIENT: while (my ($number, $name) = each(%recipients))
 	{
-		# TODO check if this number is already in aliases
+		ALIAS: foreach my $anumber (values %aliases)
+		{
+			if ($anumber == $number)
+			{
+				next RECIPIENT;
+			}
+		}
 
-		while ($name eq "")
+		PROMPT: while ($name eq "")
 		{
 			print $RL_OUT "[ create alias for '$number' with this name : ] ";
 
@@ -703,8 +724,17 @@ sub read_config_file
 
 		if (/^alias\s*([\w\.\-\_]*)\s*(\+?\d*)$/i)
 		{
-			$aliases{$1} = $2;
-			&log_debug("added alias for $1", 2);
+			my $std_number = $carrier->validate_number($2);
+
+			if ($std_number != -1)
+			{
+				$aliases{$1} = $std_number;
+				&log_debug("added alias for $1 = $std_number", 2);
+			}
+			else
+			{
+				&log_error("not a valid alias number in " . $_);
+			}
 		}
 		elsif (/^alias\s*([\w\.\-\_]*)\s*([\w\d\s]*)/i)
 		{
@@ -1066,9 +1096,9 @@ Prints this help message and exits
 
 Debug mode (use twice for more verbose output)
 
-=item B<-version>
+=item B<--version>
 
-Print version and exits
+Print version and exit
 
 =back
 

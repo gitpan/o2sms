@@ -7,10 +7,10 @@ WriteMakefile(
 	VERSION_FROM	=> 'bin/o2sms',
 	EXE_FILES     => [ 'bin/o2sms', 'bin/vodasms', 'bin/meteorsms' ],
 	PREREQ_PM	=> {
-		Getopt::Long		=> 0,
+		Getopt::Long		=> 2.33,
 		Term::ReadLine		=> 0,
 		Storable		=> 0,
-		TestGen4Web::Runner	=> 0,
+		TestGen4Web::Runner	=> 0.04,
 		IO::Socket::SSL		=> 0,
 		Net::SSLeay		=> 0,
 		Crypt::SSLeay		=> 0,

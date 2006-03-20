@@ -1,6 +1,15 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
-3.08		2006-08-08
+3.09		2006-03-20
+
+		Using international number format.
+		Clearing cookie jar before login.
+		Moved carrier specific processing into sub-modules.
+		Fixed bug when saving already-existing aliases.
+		Fixed bug when specifying message on command line.
+		Fixed bug with processing '--' arguments.
+
+3.08		2006-03-08
 
 		Minimum required for URI module is version 1.26.
 		Workaround for bug in LWP::UserAgent using HTTPS proxies.

@@ -1,5 +1,5 @@
 #
-# $Id: o2sms.pm 179 2006-03-02 14:00:49Z mackers $
+# $Id: o2sms.pm 205 2006-03-17 16:05:58Z mackers $
 
 package WWW::SMS::IE::o2sms;
 
@@ -36,7 +36,7 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 179 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 205 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::o2sms::ISA = qw{WWW::SMS::IE::iesms};
 
@@ -73,6 +73,15 @@ sub _init
 	$self->message_file($self->config_dir() . "lastmsg");
 	$self->cookie_file($self->config_dir() . ".cookie");
 	$self->action_state_file($self->config_dir() . ".state");
+}
+
+sub _format_number
+{
+	my ($self, $number) = @_;
+
+	$number =~ s/^\+/00/;
+
+	return $number;
 }
 
 sub is_o2

@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 179 2006-03-02 14:00:49Z mackers $
+# $Id: iesms.pm 208 2006-03-20 15:39:49Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,16 +51,17 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 179 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 208 $ =~ /(\d+)/);
 
 use TestGen4Web::Runner;
 use File::stat;
 use Storable;
 use File::Basename;
+use Data::Dumper;
 
 use constant LOGIN_LIFETIME => 60 * 30;
 use constant TG4W_VERIFY_TITLES => 0;
-use constant TG4W_QUIET => 1;
+use constant TG4W_QUIET => 0;
 
 my %iesms_user_agent_strings = (
 	"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)" => 1.0,
@@ -96,20 +97,26 @@ sub new
 
 	bless ($self, $class);
 
-	$self->{tg4w_runner} = new TestGen4Web::Runner;
-
 	$self->debug(0);
-
-	$self->{tg4w_runner}->user_agent()->agent($self->_choose_agent_string());
-	$self->{tg4w_runner}->verify_titles(TG4W_VERIFY_TITLES);
-	$self->{tg4w_runner}->quiet(TG4W_QUIET);
 	$self->login_lifetime(LOGIN_LIFETIME);
 
 	$self->_init();
 
-	$self->{tg4w_runner}->load($self->_action_file());
-
 	return $self;
+}
+
+sub _init_tg4w_runner
+{
+	my $self = shift;
+
+	$self->{tg4w_runner} = new TestGen4Web::Runner(debug=>($self->debug()));
+
+	$self->{tg4w_runner}->user_agent()->agent($self->_choose_agent_string());
+	$self->{tg4w_runner}->verify_titles(TG4W_VERIFY_TITLES);
+	$self->{tg4w_runner}->quiet(TG4W_QUIET);
+	$self->{tg4w_runner}->load($self->_action_file());
+	$self->{tg4w_runner}->cookie_jar_file($self->{cookie_jar_file});
+	$self->{tg4w_runner}->debug($self->{debug});
 }
 
 =item $carrier->login($username, $password)
@@ -134,8 +141,16 @@ sub login
 #		return 1;
 #	}
 
+	$self->_init_tg4w_runner() if (!$self->{tg4w_runner});
+
 	$self->username($username) if (defined($username));
 	$self->password($password) if (defined($password));
+
+	if (defined($self->{tg4w_runner}->cookie_jar()))
+	{
+		$self->{tg4w_runner}->cookie_jar()->clear();
+		$self->_log_debug("emptied cookie jar");
+	}
 
 	$self->_log_debug("about to log in to '" . $self->domain_name() . "' with username '" . $self->username() . "' and password '" . $self->password() . "'");
 	$self->_log_debug("user agent set to '" . $self->{tg4w_runner}->user_agent()->agent() . "'");
@@ -169,16 +184,30 @@ C<remaining_messages()>.
 
 sub send
 {
+	my $self = shift;
+
+	return $self->_real_send(@_);
+}
+
+sub _real_send
+{
 	my ($self, $raw_number, $message) = @_;
+
+	$self->_init_tg4w_runner() if (!$self->{tg4w_runner});
 
 	# validate this number
 	my $number = $self->validate_number($raw_number);
-
+	
+	my $charsleft = $self->max_length() - length($message);
+	
 	if ($number == -1)
 	{
 		$self->error("Invalid number: $raw_number");
 		return 0;
 	}
+
+	# format number how this operator likes it
+	$number = $self->_format_number($number);
 
 	# trim message to max length (multiple messages should be handled by the client)
 	if (length($message) > $self->max_length())
@@ -204,7 +233,8 @@ sub send
 	$self->{tg4w_runner}->set_replacement("recipient", $number);
 	$self->{tg4w_runner}->set_replacement("message", $message);
 	$self->{tg4w_runner}->set_replacement("delay", $self->delay($message));
-
+	$self->{tg4w_runner}->set_replacement("charsleft", $charsleft);
+	
 	$self->remaining_messages('?');
 
 	# send the message
@@ -238,7 +268,10 @@ sub send
 
 =item $carrier->validate_number($number)
 
-Returns the telephone number in C<$number> converted to the desired international format.
+Returns the telephone number in C<$number> converted to the international format, e.g.
+C<+353865551234>.
+
+Also verifies that the mobile provider can send to this number.
 
 Returns -1 if the number is invalid, C<validate_number_error()> gets the error message.
 
@@ -257,16 +290,16 @@ sub validate_number
 		}
 
 		# length ok - make international
-		$number = "00353$1$2";
+		$number = "+353$1$2";
 	}
 	elsif ($number =~ /^\+(\d*)/)
 	{
-		# is a plus style international number -- make 00
-		$number = "00$1";
+		# is a plus style international number -- is ok
 	}
 	elsif ($number =~ /^00(\d*)/)
 	{
-		# is an international number in the right format
+		# is an 00 international number -- make plus
+		$number = "+$1";
 	}
 	else
 	{
@@ -457,12 +490,13 @@ sub cookie_file
 		my ($filename, $directories, $suffix) = fileparse($_[1]);
 		mkdir ($directories, 0777) unless (-d $directories);
 	
-		$_[0]->{cookie_jar} = $_[1];
-		$_[0]->{tg4w_runner}->cookie_jar($_[1]);
+		$_[0]->{cookie_jar_file} = $_[1];
+
+		$_[0]->{tg4w_runner}->cookie_jar_file($_[1]) if ($_[0]->{tg4w_runner});
 	}
 	else
 	{
-		return $_[0]->{cookie_jar};
+		return $_[0]->{cookie_jar_file};
 	}
 }
 
@@ -579,16 +613,12 @@ This methods should be overwritten by subclasses extending this class.
 
 sub _is_valid_number
 {
-	my ($self, $number) = @_;
-
-	# TODO move to vodasms.pm
-	if (($self->is_vodafone()) && ($number !~ /^00353/))
-	{
-		$self->validate_number_error("Vodafone webtexts can only be sent to Irish mobile numbers");
-		return 0;
-	}
-
 	return 1;
+}
+
+sub _format_number
+{
+	return $_[1];
 }
 
 =item $carrier->error()
@@ -622,7 +652,8 @@ sub debug
 	if (defined($_[1]))
 	{
 		$_[0]->{debug} = $_[1];
-		$_[0]->{tg4w_runner}->debug($_[1]);
+
+		$_[0]->{tg4w_runner}->debug($_[1]) if ($_[0]->{tg4w_runner});
 	}
 	else
 	{
@@ -764,7 +795,14 @@ sub _action_file
 
 sub _save_action_state
 {
-	return store($_[0]->{tg4w_runner}->action_state(), $_[0]->action_state_file());
+	if ($_[0]->{tg4w_runner}->action_state())
+	{
+		return store($_[0]->{tg4w_runner}->action_state(), $_[0]->action_state_file());
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 sub _load_action_state

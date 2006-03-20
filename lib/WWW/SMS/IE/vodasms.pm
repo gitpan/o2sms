@@ -1,5 +1,5 @@
 #
-# $Id: vodasms.pm 187 2006-03-03 14:38:05Z mackers $
+# $Id: vodasms.pm 207 2006-03-18 17:50:25Z cliph $
 
 package WWW::SMS::IE::vodasms;
 
@@ -36,7 +36,7 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 187 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 207 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::vodasms::ISA = qw{WWW::SMS::IE::iesms};
 
@@ -65,7 +65,7 @@ sub _init
 	$self->_simulated_delay_max(SIMULATED_DELAY_MAX);
 	$self->_simulated_delay_min(SIMULATED_DELAY_MIN);
 	$self->_simulated_delay_perchar(SIMULATED_DELAY_PERCHAR);
-
+	
 	$self->full_name("Vodafone Ireland");
 	$self->domain_name("vodafone.ie");
 	$self->config_dir($self->_get_home_dir() . "/.vodasms/");
@@ -73,6 +73,28 @@ sub _init
 	$self->message_file($self->config_dir() . "lastmsg");
 	$self->cookie_file($self->config_dir() . ".cookie");
 	$self->action_state_file($self->config_dir() . ".state");
+}
+
+sub _format_number
+{
+	my ($self, $number) = @_;
+
+	$number =~ s/^\+353/0/;
+
+	return $number;
+}
+
+sub _is_valid_number
+{
+	my ($self, $number) = @_;
+
+	if ($number !~ /^\+353/)
+	{
+		$self->validate_number_error("Vodafone webtexts can only be sent to Irish mobile numbers");
+		return 0;
+	}
+
+	return 1;
 }
 
 sub is_vodafone
