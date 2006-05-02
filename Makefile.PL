@@ -4,13 +4,14 @@ WriteMakefile(
 	NAME		=> 'o2sms',
 	DISTNAME	=> 'o2sms',
 	ABSTRACT	=> 'A module to send SMS messages using .ie websites',
+	AUTHOR		=> 'mackers',
 	VERSION_FROM	=> 'bin/o2sms',
 	EXE_FILES     => [ 'bin/o2sms', 'bin/vodasms', 'bin/meteorsms' ],
 	PREREQ_PM	=> {
 		Getopt::Long		=> 2.33,
 		Term::ReadLine		=> 0,
 		Storable		=> 0,
-		TestGen4Web::Runner	=> 0.04,
+		TestGen4Web::Runner	=> 0.05,
 		IO::Socket::SSL		=> 0,
 		Net::SSLeay		=> 0,
 		Crypt::SSLeay		=> 0,
@@ -51,6 +52,9 @@ publish-mackers.com: dist
 	/usr/bin/pod2html -title WWW::SMS::IE::meteorsms -htmlroot . lib/WWW/SMS/IE/meteorsms.pm > /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/docs/v3/WWW/SMS/IE/meteorsms.html
 	find . -name '*.tmp' | xargs rm
 	cp `ls -1t *.tar.gz | head -1` /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/releases/
+
+exe:
+	pp -v=3 -L pp_o2sms.log -a "c:/perl/lib/attributes.pm;./attributes.pm" -o o2sms.exe -l c:/perl/bin/libeay32.dll -l c:/perl/bin/ssleay32.dll bin/o2sms
 
 MAKE_FRAG
 }

@@ -1,5 +1,13 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.10		2006-05-02
+
+		Vodafone support.
+		Fixed bug when specifying proxy.
+		Allowing + style numbers on command line, improving invalid number check.
+		Improved Win32 compatibility.
+		Command line arguments now override config file settings.
+
 3.09		2006-03-20
 
 		Using international number format.

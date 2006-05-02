@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 209 2006-03-20 16:02:37Z mackers $
+# $Id: o2sms 239 2006-05-02 16:14:06Z cliph $
 
 =head1 o2sms
 
@@ -21,17 +21,17 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 209 $ =~ /(\d+)/);
-$VERSION = '3.09';
+#$VERSION = sprintf("3.%02d", q$Revision: 239 $ =~ /(\d+)/);
+$VERSION = '3.10';
 
 # -- modules
 use File::stat;
-use Getopt::Long;
+use Getopt::Long 2.33;
 use Pod::Usage;
-use Term::ReadLine;
-use POSIX qw(strftime);
-use threads;
-use threads::shared;
+#use Term::ReadLine;
+#use POSIX qw(strftime);
+#use threads;
+#use threads::shared;
 
 $|++;
 
@@ -44,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 209 2006-03-20 16:02:37Z mackers $';
+my $svnid = '$Id: o2sms 239 2006-05-02 16:14:06Z cliph $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -72,6 +72,7 @@ my $widdley_enabled = 0;
 my $term;
 my $carrier;
 my %recipients;
+my @ARGV_recipients;
 my @message_parts;
 my $message_whole;
 my %aliases;
@@ -131,7 +132,7 @@ else
 
 # -- process recipients
 
-if (!(%recipients = &process_recipients(@ARGV)))
+if (!(%recipients = &process_recipients(@ARGV_recipients)))
 {
 	&print_usage_and_exit(1);
 }
@@ -198,6 +199,7 @@ NUMBER: foreach my $number (keys(%recipients))
 {
 	my $message_part_number = 1;
 	my $message_part_count = scalar(@message_parts);
+	my $delay;
 
 	MESSAGE: foreach my $message_part (@message_parts)
 	{
@@ -205,6 +207,9 @@ NUMBER: foreach my $number (keys(%recipients))
 		{
 			# -- start a widdley
 			&widdley_start();
+
+			# if delay > 0, tell the user
+			($delay = $carrier->delay($message_part)) && &log_info("sending message after $delay seconds ...");
 
 			my $retval = $carrier->send($number, $message_part);
 
@@ -239,6 +244,7 @@ NUMBER: foreach my $number (keys(%recipients))
 # -- do exity stuff
 
 $carrier->write_message_file($message_whole);
+
 &save_aliases();
 
 # -- quit with success
@@ -268,12 +274,17 @@ sub guess_carrier_name
 
 sub get_username
 {
-	unless ($^O eq 'MSWin32')
+	unless (&is_win32())
 	{
 		return ( getpwuid $< ) [0];
 	}
 
 	return "user";
+}
+
+sub is_win32
+{
+	return ($^O eq 'MSWin32');
 }
 
 sub print_usage_and_exit
@@ -290,11 +301,17 @@ sub print_usage_and_exit
 sub process_command_line_options
 {
 	Getopt::Long::Configure("bundling_override");
-	#Getopt::Long::Configure("prefix_pattern=(-|--)");
+	Getopt::Long::Configure("prefix_pattern=-+");
 	Getopt::Long::Configure("auto_version");
 
+	my @ARGV_original = @ARGV;
+	$debug_level = 0;
+
 	GetOptions(%options) or &print_usage_and_exit(1);
+	
 	# recipents are now in $ARGV
+	@ARGV_recipients = @ARGV;
+	@ARGV = @ARGV_original;
 
 	return 1;
 }
@@ -328,6 +345,15 @@ sub load_configuration
 
 	# set up carrier object 
 	$carrier = &get_carrier($carrier_name);
+
+	#if (defined($config_file))
+	#{
+	#	&log_debug("using configuration file '$config_file'");
+	#}
+	#else
+	#{
+	#	&log_debug("using default configuration file '" . $carrier->config_file() . "'");
+	#}
 
 	if (!defined($config_file) && (-f $carrier->config_file()))
 	{
@@ -609,6 +635,8 @@ sub process_message
 # -- save alias
 sub save_aliases
 {
+	return if (&is_win32()); # a few things inexplicibly don't work on win32 in this method
+
 	if (!(&is_interactive))
 	{
 		return;
@@ -700,7 +728,7 @@ sub read_config_file
 	# check config file isn't world readble
 	my $config_file_info = stat($_[0]);
 
-	if (($config_file_info->mode & 004) && ($^O ne 'MSWin32'))
+	if (($config_file_info->mode & 004) && (!&is_win32()))
 	{
 		&log_warning($_[0] . " is world readable");
 	}
@@ -708,12 +736,12 @@ sub read_config_file
 	# read the file
 	if (!(open(SMSCONF, $_[0])))
 	{
-		&log_error("can't open file $_[0]");
+		&log_error("can't open file '" . $_[0] . "'");
 
 		return 0;
 	}
 
-	&log_debug("reading config file " . $_[0]);
+	&log_debug("reading config file '" . $_[0] . "'");
 
 	my @conf_args;
 
@@ -758,10 +786,10 @@ sub read_config_file
 
 	if (@conf_args)
 	{
-		my @old_ARGV = @ARGV;
+		my @ARGV_original = @ARGV;
 		@ARGV = @conf_args;
 		GetOptions(%options) or &log_warning("unknown configuration file option");
-		@ARGV = @old_ARGV;
+		@ARGV = @ARGV_original;
 	}
 
 	close (SMSCONF);
@@ -822,7 +850,7 @@ sub prettyprint_recipients
 
 sub migrate_settings
 {
-	return if ($^O eq 'MSWin32');
+	return if (&is_win32());
 
 	return if (!&is_interactive());
 	
@@ -955,10 +983,12 @@ sub read_password
 
 	my $password;
 
-	system "stty -echo"; # Echo off
+	system "stty -echo" unless (&is_win32()); # Echo off
+	
 	print $RL_OUT "[ password : ] "; # Prompt for password
 	chomp($password = <STDIN>); # Remove newline
-	system "stty echo"; # Echo on
+
+	system "stty echo" unless (&is_win32()); # Echo on
 	print "\n";
 
 	return $password;
@@ -1016,7 +1046,7 @@ sub fade_away
 {
 	&widdley_stop();
 
-	system "stty echo"; # Echo on if cancel during a password read
+	system "stty echo" unless (&is_win32()); # Echo on if cancel during a password read
 
 	&log_info("okay, I'm outta here.");
 	exit(EXIT_SUCCESS);  

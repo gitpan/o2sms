@@ -1,5 +1,5 @@
 #
-# $Id: vodasms.pm 207 2006-03-18 17:50:25Z cliph $
+# $Id: vodasms.pm 238 2006-05-02 16:03:03Z cliph $
 
 package WWW::SMS::IE::vodasms;
 
@@ -36,13 +36,13 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 207 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 238 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::vodasms::ISA = qw{WWW::SMS::IE::iesms};
 
 use constant LOGIN_START_STEP => 0;
-use constant LOGIN_END_STEP => 7;
-use constant SEND_START_STEP => 8;
+use constant LOGIN_END_STEP => 6;
+use constant SEND_START_STEP => 7;
 use constant SEND_END_STEP => undef;
 use constant REMAINING_MESSAGES_MATCH => 1;
 use constant ACTION_FILE => "vodasms.action";
@@ -68,11 +68,23 @@ sub _init
 	
 	$self->full_name("Vodafone Ireland");
 	$self->domain_name("vodafone.ie");
-	$self->config_dir($self->_get_home_dir() . "/.vodasms/");
-	$self->config_file($self->config_dir() . "config");
-	$self->message_file($self->config_dir() . "lastmsg");
-	$self->cookie_file($self->config_dir() . ".cookie");
-	$self->action_state_file($self->config_dir() . ".state");
+
+	if ($self->is_win32())
+	{
+		$self->config_dir($self->_get_home_dir());
+		$self->config_file($self->config_dir() . "vodasms.ini");
+		$self->message_file($ENV{TMP} . "/vodasms_lastmsg.txt");
+		$self->cookie_file($ENV{TMP} . "/vodasms.cookie");
+		$self->action_state_file($ENV{TMP} . "/vodasms.state");
+	}
+	else
+	{
+		$self->config_dir($self->_get_home_dir() . "/.vodasms/");
+		$self->config_file($self->config_dir() . "config");
+		$self->message_file($self->config_dir() . "lastmsg");
+		$self->cookie_file($self->config_dir() . ".cookie");
+		$self->action_state_file($self->config_dir() . ".state");
+	}
 }
 
 sub _format_number

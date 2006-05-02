@@ -1,5 +1,5 @@
 #
-# $Id: meteorsms.pm 179 2006-03-02 14:00:49Z mackers $
+# $Id: meteorsms.pm 217 2006-04-19 12:57:30Z mackers $
 
 package WWW::SMS::IE::meteorsms;
 
@@ -36,7 +36,7 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 179 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 217 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::meteorsms::ISA = qw{WWW::SMS::IE::iesms};
 
@@ -68,11 +68,23 @@ sub _init
 
 	$self->full_name("Meteor Ireland");
 	$self->domain_name("meteor.ie");
-	$self->config_dir($self->_get_home_dir() . "/.meteorsms/");
-	$self->config_file($self->config_dir() . "config");
-	$self->message_file($self->config_dir() . "lastmsg");
-	$self->cookie_file($self->config_dir() . ".cookie");
-	$self->action_state_file($self->config_dir() . ".state");
+
+	if ($self->is_win32())
+	{
+		$self->config_dir($self->_get_home_dir());
+		$self->config_file($self->config_dir() . "meteorsms.ini");
+		$self->message_file($ENV{TMP} . "/meteorsms_lastmsg.txt");
+		$self->cookie_file($ENV{TMP} . "/meteorsms.cookie");
+		$self->action_state_file($ENV{TMP} . "/meteorsms.state");
+	}
+	else
+	{
+		$self->config_dir($self->_get_home_dir() . "/.meteorsms/");
+		$self->config_file($self->config_dir() . "config");
+		$self->message_file($self->config_dir() . "lastmsg");
+		$self->cookie_file($self->config_dir() . ".cookie");
+		$self->action_state_file($self->config_dir() . ".state");
+	}
 }
 
 sub is_meteor

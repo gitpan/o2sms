@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 208 2006-03-20 15:39:49Z mackers $
+# $Id: iesms.pm 237 2006-05-01 17:03:06Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -13,7 +13,7 @@ To use a subclass:
 
   require WWW::SMS::IE::o2sms;
 
-  my $carrier = new WWW::SMS::IE::iesms;
+  my $carrier = new WWW::SMS::IE::o2sms;
 
   if ($carrier->login('o2_user', 'password'))
   {
@@ -51,13 +51,14 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 208 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 237 $ =~ /(\d+)/);
 
-use TestGen4Web::Runner;
+use TestGen4Web::Runner 0.04;
 use File::stat;
 use Storable;
 use File::Basename;
-use Data::Dumper;
+use POSIX qw(ceil);
+#use Data::Dumper;
 
 use constant LOGIN_LIFETIME => 60 * 30;
 use constant TG4W_VERIFY_TITLES => 0;
@@ -157,6 +158,9 @@ sub login
 
 	my $retval =  $self->{tg4w_runner}->run($self->_login_start_step(), $self->_login_end_step());
 
+	# save the error
+	$self->error($self->{tg4w_runner}->error()) if (!$retval);
+
 	$self->{matches} = $self->{tg4w_runner}->matches();
 
 	$self->_log_debug("login " . ($retval?"succeeded":"failed with error '" . $self->error() . "'"));
@@ -248,6 +252,9 @@ sub _real_send
 
 	my $retval = $self->{tg4w_runner}->run($self->_send_start_step(), $self->_send_end_step());
 
+	# save the error
+	$self->error($self->{tg4w_runner}->error()) if (!$retval);
+
 	# handle the matches
 	$self->{matches} = $self->{tg4w_runner}->matches();
 
@@ -281,12 +288,22 @@ sub validate_number
 {
 	my ($self, $number) = @_;
 
-	if ($number =~ /^0(8[3567])(\d*)/)
+	# strip whitespace and hyphens from the number
+	$number =~ s/[\s\-]//g;
+
+	if ($number =~ /[^\d\+]/)
+	{
+		# has an invalid character
+		$self->validate_number_error("number has an invalid character");
+		return -1;
+	}
+	elsif ($number =~ /^0(8[3567])(\d*)/)
 	{
 		# is an irish mobile number - check length
 		if (length($number) != 10)
 		{
 			$self->validate_number_error("number is the wrong length for an Irish mobile number");
+			return -1;
 		}
 
 		# length ok - make international
@@ -304,6 +321,7 @@ sub validate_number
 	else
 	{
 		# don't know what this is
+		$self->validate_number_error("number is badly formed");
 		return -1;
 	}
 
@@ -376,7 +394,7 @@ sub delay
 {
 	my ($self, $message) = @_;
 
-	my $delay = POSIX::ceil(length($message) * $self->_simulated_delay_perchar());
+	my $delay = ceil(length($message) * $self->_simulated_delay_perchar());
 	$delay = $self->_simulated_delay_max() if ($delay > $self->_simulated_delay_max());
 	$delay = $self->_simulated_delay_min() if ($delay < $self->_simulated_delay_min());
 
@@ -466,7 +484,7 @@ sub username
 	}
 	else
 	{
-		return $_[0]->{username};
+		return $_[0]->{username} || "";
 	}
 }
 
@@ -479,7 +497,7 @@ sub password
 	}
 	else
 	{
-		return $_[0]->{password};
+		return $_[0]->{password} || "";
 	}
 }
 
@@ -570,7 +588,14 @@ Return the C<LWP::UserAgent> object used internally.
 
 sub user_agent
 {
-	return $_[0]->{tg4w_runner}->user_agent();
+	my $self = shift;
+
+	if (!defined($self->{tg4w_runner}))
+	{
+		$self->_init_tg4w_runner();
+	}
+
+	return $self->{tg4w_runner}->user_agent();
 }
 
 =item $carrier->config_file()
@@ -629,15 +654,19 @@ Returns the last error after a login() or send().
 
 sub error
 {
-	my $err;
+	my ($self, $error) = @_;
 
-	if ($err = $_[0]->{tg4w_runner}->error())
+	if (defined($error))
 	{
-		return $err;
+		$self->{last_error} = $error;
+	}
+	elsif ($self->{last_error})
+	{
+		return $self->{last_error};
 	}
 	else
 	{
-		return "Internal Error";
+		return 'Internal Error';
 	}
 }
 
@@ -668,11 +697,20 @@ sub dummy_send
 	defined($_[1]) ? $_[0]->{dummy_send} = $_[1] : $_[0]->{dummy_send};
 }
 
+sub is_win32
+{
+	return ($^O eq 'MSWin32');
+}
+
 sub _get_home_dir
 { 
 	if (defined($ENV{HOME}))
 	{
 		return $ENV{HOME};
+	}
+	elsif (is_win32() && defined($ENV{HOMEPATH}))
+	{
+		return $ENV{HOMEPATH} . "/";
 	}
 	else
 	{

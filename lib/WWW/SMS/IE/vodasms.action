@@ -57,12 +57,12 @@
             <value><![CDATA[Send Another Message]]></value>
         </action>
         <action type="click" refresh="true" step="14">
-            <xpath><![CDATA[*/TABLE[1]/TBODY[1]/TR[1]/TD[1]/TABLE[9]/TBODY[1]/TR[1]/TD[4]/TABLE[2]/TBODY[1]/TR[1]/TD[1]/TABLE[4]/TBODY[1]/TR[1]/TD[1]/A[1]]]></xpath>
+            <xpath><![CDATA[*/A[@HREF="textandwap/webtext"]]]></xpath>
             <value><![CDATA[]]></value>
         </action>
         <action type="assert-text-exists" step="15">
             <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[Messages Remaining\s*(\d+)]]></value>
+	    <value><![CDATA[<td height="16" width="200"><b>(\d+)]]></value>
         </action>
     </actions>
 </tg4w>
