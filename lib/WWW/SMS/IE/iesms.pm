@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 237 2006-05-01 17:03:06Z mackers $
+# $Id: iesms.pm 244 2006-05-10 17:03:32Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,14 +51,14 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 237 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 244 $ =~ /(\d+)/);
 
-use TestGen4Web::Runner 0.04;
+#use TestGen4Web::Runner 0.04;
 use File::stat;
 use Storable;
 use File::Basename;
 use POSIX qw(ceil);
-#use Data::Dumper;
+use Data::Dumper;
 
 use constant LOGIN_LIFETIME => 60 * 30;
 use constant TG4W_VERIFY_TITLES => 0;
@@ -110,7 +110,18 @@ sub _init_tg4w_runner
 {
 	my $self = shift;
 
+	return 1 if (defined($self->{tg4w_runner}));
+
+	require TestGen4Web::Runner;
+
 	$self->{tg4w_runner} = new TestGen4Web::Runner(debug=>($self->debug()));
+
+	if ($self->{tg4w_runner}->VERSION < 0.04)
+	{
+		$self->_log_error("TestGen4Web::Runner version 0.04 or higher required");
+
+		return 0;
+	}
 
 	$self->{tg4w_runner}->user_agent()->agent($self->_choose_agent_string());
 	$self->{tg4w_runner}->verify_titles(TG4W_VERIFY_TITLES);
@@ -118,6 +129,8 @@ sub _init_tg4w_runner
 	$self->{tg4w_runner}->load($self->_action_file());
 	$self->{tg4w_runner}->cookie_jar_file($self->{cookie_jar_file});
 	$self->{tg4w_runner}->debug($self->{debug});
+
+	return 1;
 }
 
 =item $carrier->login($username, $password)

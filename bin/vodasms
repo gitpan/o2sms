@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 239 2006-05-02 16:14:06Z cliph $
+# $Id: o2sms 246 2006-05-11 16:54:23Z mackers $
 
 =head1 o2sms
 
@@ -21,8 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 239 $ =~ /(\d+)/);
-$VERSION = '3.10';
+#$VERSION = sprintf("3.%02d", q$Revision: 246 $ =~ m/(\d+)/);
+$VERSION = '3.11';
 
 # -- modules
 use File::stat;
@@ -44,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 239 2006-05-02 16:14:06Z cliph $';
+my $svnid = '$Id: o2sms 246 2006-05-11 16:54:23Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -254,15 +254,15 @@ exit(0);
 
 sub guess_carrier_name
 {
-	if ($0 =~ /voda(fone)?sms(\.pl)?$/i)
+	if ($0 =~ m/voda(fone)?sms(\.pl)?$/i)
 	{
 		return "vodafone";
 	}
-	elsif ($0 =~ /met(eor)?sms(\.pl)?$/i)
+	elsif ($0 =~ m/met(eor)?sms(\.pl)?$/i)
 	{
 		return "meteor";
 	}
-	elsif ($0 =~ /o2sms(\.pl)?$/i)
+	elsif ($0 =~ m/o2sms(\.pl)?$/i)
 	{
 		return "o2";
 	}
@@ -445,7 +445,7 @@ sub process_recipients
 	{
 		$recip = $recips2[$i];
 
-		if ($recip =~ /[^\d\+]/)
+		if ($recip =~ m/[^\d\+]/)
 		{
 			# has non-numeric character - might be alias
 			if (exists($aliases{$recip}))
@@ -548,10 +548,9 @@ sub process_message
 	}
 
 	# check do we need to split up the message
-	if ((length($message) > $single_max_length) || ($message =~ /$man_delim/))
+	if ((length($message) > $single_max_length) || ($message =~ m/$man_delim/))
 	{
-	
-		if (($split_messages == OFF) && ($message !~ /$man_delim/))
+		if (($split_messages == OFF) && ($message !~ m/$man_delim/))
 		{
 			&log_fatal("message is too long (" . length($message) . "/$single_max_length), exitting");
 		}
@@ -559,16 +558,16 @@ sub process_message
 		my $restmsg = $message;
 		my $partmsg;
 
-		while ((length($restmsg) > $single_max_length) || ($restmsg =~ /$man_delim/))
+		while ((length($restmsg) > $single_max_length) || ($restmsg =~ m/$man_delim/))
 		{
 			# if manual split, and message part can fit, then add the first bit and loop
-			if ($restmsg =~ /^(.*?)$man_delim(.*)/)
+			if ($restmsg =~ m/^(.*?)$man_delim(.*)/sm)
 			{
 				if (length($1) < $single_max_length)
 				{
 					$partmsg = $1;
 					$restmsg = $2;
-					push (@message_parts, $partmsg) if ($partmsg =~ /\S/);
+					push (@message_parts, $partmsg) if ($partmsg =~ m/\S/);
 					next;
 				}
 			}
@@ -589,10 +588,10 @@ sub process_message
 				($partmsg, $restmsg) = &split_message($single_max_length, $restmsg);
 			}
 
-			push (@message_parts, $partmsg) if ($partmsg =~ /\S/);
+			push (@message_parts, $partmsg) if ($partmsg =~ m/\S/);
 		}
 
-		push (@message_parts, $restmsg . $signature) if ($restmsg =~ /\S/);
+		push (@message_parts, $restmsg . $signature) if ($restmsg =~ m/\S/);
 
 		&log_warning("long or split message, splitting into " . scalar(@message_parts) . " parts");
 	}
@@ -660,11 +659,11 @@ sub save_aliases
 
 			chomp($name4num);
 
-			if ($name4num !~ /\S/)
+			if ($name4num !~ m/\S/)
 			{
 				last;
 			}
-			elsif ($name4num !~ /[\w\.\-\_]+/)
+			elsif ($name4num !~ m/[\w\.\-\_]+/)
 			{
 				&log_error("invalid alias name '$name4num'");
 			}
@@ -960,7 +959,7 @@ sub read_message
 			$message .= $_;
 		}
 
-		$term->addhistory($message) if ($message =~ /\S/);
+		$term->addhistory($message) if ($message =~ m/\S/);
 	}
 	else
 	{
@@ -1004,7 +1003,7 @@ sub yn_prompt
 
 	my $resp = <STDIN>;
 
-	return (defined($resp) && ($resp =~ /^y/i));
+	return (defined($resp) && ($resp =~ m/^y/i));
 }
 
 sub log_debug
