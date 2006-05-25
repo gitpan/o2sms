@@ -11,7 +11,7 @@ WriteMakefile(
 		Getopt::Long		=> 2.33,
 		Term::ReadLine		=> 0,
 		Storable		=> 0,
-		TestGen4Web::Runner	=> 0.05,
+		TestGen4Web::Runner	=> 0.07,
 		IO::Socket::SSL		=> 0,
 		Net::SSLeay		=> 0,
 		Crypt::SSLeay		=> 0,
@@ -54,7 +54,26 @@ publish-mackers.com: dist
 	cp `ls -1t *.tar.gz | head -1` /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/releases/
 
 exe:
-	pp -v=3 -L pp_o2sms.log -a "c:/perl/lib/attributes.pm;./attributes.pm" -o o2sms.exe -l c:/perl/bin/libeay32.dll -l c:/perl/bin/ssleay32.dll bin/o2sms
+	set PERL5LIB=lib
+#	pp -v=3 -L pp_o2sms.log -a "c:/perl/lib/attributes.pm;./attributes.pm" -a "c:/perl/lib/Storable.pm;./Storable.pm" -o o2sms.exe -l c:/perl/bin/libeay32.dll -l c:/perl/bin/ssleay32.dll bin/o2sms
+	pp \
+	-v=3 \
+	-L pp_o2sms.log \
+	-a "c:/perl/lib/attributes.pm;./attributes.pm" \
+	-a "c:/perl/lib/Storable.pm;./Storable.pm" \
+	-a "lib/WWW/SMS/IE/vodasms.action;./lib/WWW/SMS/IE/vodasms.action" \
+	-a "lib/WWW/SMS/IE/o2sms.action;./lib/WWW/SMS/IE/o2sms.action" \
+	-a "lib/WWW/SMS/IE/meteorsms.action;./lib/WWW/SMS/IE/meteorsms.action" \
+	-o o2sms4w.exe \
+	-l c:/perl/bin/libeay32.dll \
+	-l c:/perl/bin/ssleay32.dll \
+	--gui \
+	--icon o2sms.ico \
+	bin/o2sms4w
+
+publish-exe: o2sms4w.exe
+	zip o2sms4w.zip o2sms4w.exe
+	scp o2sms4w.zip mackers.com:www/projects/o2sms/releases/o2sms4w.zip
 
 MAKE_FRAG
 }

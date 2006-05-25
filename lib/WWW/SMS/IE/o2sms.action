@@ -3,71 +3,72 @@
     <actions>
         <action type="goto" refresh="true" step="0">
             <xpath><![CDATA[window.location.href]]></xpath>
-            <value><![CDATA[http://web.o2.ie/]]></value>
+            <value><![CDATA[https://www.o2online.ie/amserver/UI/Login?org=o2ext]]></value>
         </action>
-        <action type="verify-title" step="1">
+        <action type="verify-title" refresh="true" step="1">
             <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[O2 Mobile phone network, Ireland - Phones, Ringtones and more]]></value>
+            <value><![CDATA[Login]]></value>
         </action>
         <action type="fill" step="2">
-            <xpath><![CDATA[*/FORM[3]/*/INPUT[@ID="username"]]]></xpath>
+            <xpath><![CDATA[*/FORM[@NAME="Login"]/*/INPUT[@ID="IDToken1"]]]></xpath>
             <value><![CDATA[{username}]]></value>
         </action>
         <action type="fill" step="3">
-            <xpath><![CDATA[*/FORM[3]/*/INPUT[@ID="password"]]]></xpath>
+            <xpath><![CDATA[*/FORM[@NAME="Login"]/*/INPUT[@ID="IDToken2"]]]></xpath>
             <value><![CDATA[{password}]]></value>
         </action>
         <action type="click" refresh="true" step="4">
-            <xpath><![CDATA[*/FORM[3]/*/INPUT[@NAME="imageField" and @VALUE=""]]]></xpath>
-            <value><![CDATA[imageField]]></value>
+            <xpath><![CDATA[*/FORM[@NAME="Login"]/*/INPUT[@NAME="Go" and @VALUE="Go"]]]></xpath>
+            <value><![CDATA[Go]]></value>
         </action>
-        <action type="verify-title" refresh="true" step="5">
+        <action type="verify-title" step="5">
             <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[o2.ie]]></value>
+            <value><![CDATA[O2 - My O2 - My O2 home]]></value>
         </action>
-        <action type="verify-title" step="6">
+        <action type="assert-text-exists" refresh="true" step="6">
             <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[O2 Ireland - O2 Mobile phone, Ringtones and free text messages]]></value>
+            <value><![CDATA[Welcome,]]></value>
         </action>
-        <action type="assert-text-exists" step="7">
-            <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[You are here: Personal Home]]></value>
-        </action>
-        <action type="click" refresh="true" step="8">
-            <xpath><![CDATA[*/A[@CDATA="nullWeb text"]]]></xpath>
+        <action type="click" refresh="true" step="7">
+            <xpath><![CDATA[*/A[@CDATA="Webtext"]]]></xpath>
             <value><![CDATA[]]></value>
         </action>
-        <action type="verify-title" refresh="true" step="9">
-            <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[O2 - Personal - My O2 - Web Text - 250 free every month]]></value>
-        </action>
-        <action type="verify-title" step="10">
-            <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[O2 - Personal - My O2 - Web Text - 250 free every month]]></value>
-        </action>
-        <action type="fill" frame="grouptext" step="11">
-            <xpath><![CDATA[*/FORM[1]/*/TEXTAREA[@NAME="Msg"]]]></xpath>
+        <action type="fill" step="8">
+            <xpath><![CDATA[*/FORM[2]/*/TEXTAREA[@NAME="Msg"]]]></xpath>
             <value><![CDATA[{message}]]></value>
         </action>
-        <action type="fill" frame="grouptext" step="12">
-            <xpath><![CDATA[*/FORM[1]/*/INPUT[@TYPE="text" and @NAME="msisdn"]]]></xpath>
-            <value><![CDATA[{recipient}]]></value>
+        <action type="fill" step="9">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="Msg1"]]]></xpath>
+            <value><![CDATA[{message}]]></value>
         </action>
-        <action type="fill" frame="grouptext" step="13">
-            <xpath><![CDATA[*/FORM[1]/*/INPUT[@NAME="command"]]]></xpath>
-            <value><![CDATA[send]]></value>
+        <action type="fill" step="10">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="msgcount"]]]></xpath>
+            <value><![CDATA[{charsleft}]]></value>
         </action>
-        <action type="click" refresh="true" frame="grouptext" step="14">
-            <xpath><![CDATA[*/FORM[1]/*/INPUT[@NAME="Send" and @VALUE="Send"]]]></xpath>
+        <action type="fill" step="11">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="recipients"]]]></xpath>
+            <value><![CDATA[1]]></value>
+        </action>
+        <action type="fill" step="12">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="NumMessages"]]]></xpath>
+            <value><![CDATA[1]]></value>
+        </action>
+        <action type="fill" step="13">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="command"]]]></xpath>
             <value><![CDATA[Send]]></value>
         </action>
-        <action type="verify-title" step="15" refresh="true">
-            <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[O2 - Personal - My O2 - Web Text - 250 free every month]]></value>
+
+        <action type="fill" step="14">
+            <xpath><![CDATA[*/FORM[2]/*/INPUT[@TYPE="text" and @NAME="msisdn"]]]></xpath>
+            <value><![CDATA[{recipient}]]></value>
+        </action>
+        <action type="click" refresh="true" step="15">
+            <xpath><![CDATA[*/FORM[2]/]]></xpath>
+            <value><![CDATA[]]></value>
         </action>
         <action type="assert-text-exists" step="16">
             <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[You now have (\d+) Free Messages remaining this month]]></value>
+            <value><![CDATA[Number of free text messages remaining this month: <span class="emp">(\d+)]]></value>
         </action>
     </actions>
 </tg4w>

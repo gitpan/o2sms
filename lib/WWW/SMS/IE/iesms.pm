@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 244 2006-05-10 17:03:32Z mackers $
+# $Id: iesms.pm 261 2006-05-25 13:59:37Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,7 +51,7 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 244 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 261 $ =~ /(\d+)/);
 
 #use TestGen4Web::Runner 0.04;
 use File::stat;
@@ -163,6 +163,7 @@ sub login
 	if (defined($self->{tg4w_runner}->cookie_jar()))
 	{
 		$self->{tg4w_runner}->cookie_jar()->clear();
+		$self->{tg4w_runner}->cookie_jar()->save($self->{tg4w_runner}->cookie_jar_file());
 		$self->_log_debug("emptied cookie jar");
 	}
 
@@ -479,6 +480,39 @@ sub write_message_file
 	return 1;
 }
 
+=item $carrier->write_history_file($message)
+
+Append the string <$message> to the history file as returned by C<history_file()>.
+
+=cut
+
+sub write_history_file
+{
+	my $histfile;
+	my $self = $_[0];
+	my $message = $_[1];
+	my $recipient = $_[2];
+
+	chomp($message);
+
+	if ($histfile = $self->history_file())
+	{
+		if (open (SMSMSG, ">> $histfile"))
+		{
+			print SMSMSG "-- to $recipient at " . localtime() . " --\n";
+			print SMSMSG $message . "\n";
+			print SMSMSG "\n";
+			close (SMSMSG);
+		}
+		else
+		{
+			$self->_log_warning("can't open history file '$histfile' for appending $@");
+		}
+	}
+
+	return 1;
+}
+
 =item $carrier->username()
 
 =item $carrier->password()
@@ -546,6 +580,11 @@ sub action_state_file
 sub message_file
 {
 	defined($_[1]) ? $_[0]->{message_file} = $_[1] : $_[0]->{message_file};
+}
+
+sub history_file
+{
+	defined($_[1]) ? $_[0]->{history_file} = $_[1] : $_[0]->{history_file};
 }
 
 =item $carrier->full_name()
@@ -838,7 +877,7 @@ sub _action_file
 		}
 	}
 
-	$_[0]->_log_error("Can't file action file '" . $_[1] . "'");
+	$_[0]->_log_error("Can't find action file '" . $_[1] . "'");
 
 	return 0;
 }

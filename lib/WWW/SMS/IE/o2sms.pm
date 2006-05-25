@@ -1,5 +1,5 @@
 #
-# $Id: o2sms.pm 217 2006-04-19 12:57:30Z mackers $
+# $Id: o2sms.pm 265 2006-05-25 17:12:23Z mackers $
 
 package WWW::SMS::IE::o2sms;
 
@@ -36,13 +36,13 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 217 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 265 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::o2sms::ISA = qw{WWW::SMS::IE::iesms};
 
 use constant LOGIN_START_STEP => 0;
-use constant LOGIN_END_STEP => 7;
-use constant SEND_START_STEP => 8;
+use constant LOGIN_END_STEP => 6;
+use constant SEND_START_STEP => 7;
 use constant SEND_END_STEP => undef;
 use constant REMAINING_MESSAGES_MATCH => 1;
 use constant ACTION_FILE => "o2sms.action";
@@ -74,6 +74,7 @@ sub _init
 		$self->config_dir($self->_get_home_dir());
 		$self->config_file($self->config_dir() . "o2sms.ini");
 		$self->message_file($ENV{TMP} . "/o2sms_lastmsg.txt");
+		$self->history_file($ENV{TMP} . "/o2sms_history.txt");
 		$self->cookie_file($ENV{TMP} . "/o2sms.cookie");
 		$self->action_state_file($ENV{TMP} . "/o2sms.state");
 	}
@@ -82,6 +83,7 @@ sub _init
 		$self->config_dir($self->_get_home_dir() . "/.o2sms/");
 		$self->config_file($self->config_dir() . "config");
 		$self->message_file($self->config_dir() . "lastmsg");
+		$self->history_file($self->config_dir() . "history");
 		$self->cookie_file($self->config_dir() . ".cookie");
 		$self->action_state_file($self->config_dir() . ".state");
 	}
@@ -91,7 +93,7 @@ sub _format_number
 {
 	my ($self, $number) = @_;
 
-	$number =~ s/^\+/00/;
+	$number =~ s/^\+//;
 
 	return $number;
 }

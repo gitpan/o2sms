@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 246 2006-05-11 16:54:23Z mackers $
+# $Id: o2sms 251 2006-05-17 13:32:36Z mackers $
 
 =head1 o2sms
 
@@ -21,8 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 246 $ =~ m/(\d+)/);
-$VERSION = '3.11';
+#$VERSION = sprintf("3.%02d", q$Revision: 251 $ =~ m/(\d+)/);
+$VERSION = '3.12';
 
 # -- modules
 use File::stat;
@@ -44,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 246 2006-05-11 16:54:23Z mackers $';
+my $svnid = '$Id: o2sms 251 2006-05-17 13:32:36Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -64,6 +64,7 @@ my $reuse_cookies = ON;
 my $hard_split = OFF;
 my $emulate_t9 = OFF;
 my $squeeze_text = OFF;
+my $write_history = OFF;
 my $debug_really_send = ON;
 my $debug_level = 0;
 my $readline_support = 0;
@@ -99,6 +100,7 @@ my %options = (
 	"hard-split|k!"	=> \$hard_split,
 	"emulate-t9|t9!"	=> \$emulate_t9,
 	"squeeze-text|squeeze|z!"	=> \$squeeze_text,
+	"history|h|"	=> \$write_history,
 	#"version|v"	=> sub { &print_version_and_exit(0) },
 	"help|usage|h"	=> sub { &print_usage_and_exit(0) },
 	"debug|verbose|d|V+"	=> \$debug_level,
@@ -236,14 +238,16 @@ NUMBER: foreach my $number (keys(%recipients))
 				}
 			}
 		}
-	}
 
-	$message_part_number++;
+		$message_part_number++;
+	}
 }
 
 # -- do exity stuff
 
+&log_debug("will write to message and history files");
 $carrier->write_message_file($message_whole);
+$carrier->write_history_file($message_whole, &prettyprint_recipients(%recipients)) if ($write_history);
 
 &save_aliases();
 
@@ -743,6 +747,7 @@ sub read_config_file
 	&log_debug("reading config file '" . $_[0] . "'");
 
 	my @conf_args;
+	my $line = 1;
 
 	while (<SMSCONF>)
 	{
@@ -779,6 +784,12 @@ sub read_config_file
 			push(@conf_args, "-$1");
 			push(@conf_args, $2) if ($2);
 		}
+		elsif (/\S/)
+		{
+			&log_warning("can't parse line $line of configuration file '$_[0]': '$_'");
+		}
+
+		$line++;
 	}
 
 	# use GetOptions to parse config file options, which are now in @conf_args
@@ -787,7 +798,7 @@ sub read_config_file
 	{
 		my @ARGV_original = @ARGV;
 		@ARGV = @conf_args;
-		GetOptions(%options) or &log_warning("unknown configuration file option");
+		GetOptions(%options) or &log_warning("there was an error processing the configuration file");
 		@ARGV = @ARGV_original;
 	}
 
@@ -1112,6 +1123,10 @@ Force the carrier to be this ("o2", "vodafone" or "meteor")
 =item B<-m, --message=STRING>
 
 Don't wait for STDIN, send this message
+
+=item B<-h, --history>
+
+Keep a history file (in ~/.o2sms/history)
 
 =item B<--embedded>
 
