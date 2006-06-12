@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 251 2006-05-17 13:32:36Z mackers $
+# $Id: o2sms 277 2006-06-08 17:14:15Z mackers $
 
 =head1 o2sms
 
@@ -21,8 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 251 $ =~ m/(\d+)/);
-$VERSION = '3.12';
+#$VERSION = sprintf("3.%02d", q$Revision: 277 $ =~ m/(\d+)/);
+$VERSION = '3.13';
 
 # -- modules
 use File::stat;
@@ -44,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 251 2006-05-17 13:32:36Z mackers $';
+my $svnid = '$Id: o2sms 277 2006-06-08 17:14:15Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -92,7 +92,7 @@ my %options = (
 	"sig|s=s"	=> \$signature,
 	"config-file|c=s" => \$config_file,
 	"http-proxy|proxy|P=s"	=> \$http_proxy,
-	"https-proxy"	=> \$https_proxy,
+	"https-proxy=s"	=> \$https_proxy,
 	"carrier|C=s"	=> \$carrier_name,
 	"embedded!"	=> \$embedded,
 	"split-messages|split|s!"	=> \$split_messages,
@@ -754,27 +754,33 @@ sub read_config_file
 		chomp();
 		next if (/^#/);
 
-		if (/^alias\s*([\w\.\-\_]*)\s*(\+?\d*)$/i)
+		if (/^alias\s*([\w\.\-\_]*)\s*(\+?\d*)\s*$/i)
 		{
-			my $std_number = $carrier->validate_number($2);
+			my $std_number = $2;
 
-			if ($std_number != -1)
+			if (defined($carrier))
 			{
-				$aliases{$1} = $std_number;
-				&log_debug("added alias for $1 = $std_number", 2);
+				# can only validate number if carrier has been defined
+				# meaning if won't work when specifying config file on the command line
+				$std_number = $carrier->validate_number($2);
+
+				if ($std_number == -1)
+				{
+					&log_error("not a valid alias number in " . $_);
+					next;
+				}
 			}
-			else
-			{
-				&log_error("not a valid alias number in " . $_);
-			}
+
+			$aliases{$1} = $std_number;
+			&log_debug("added alias for $1 = $std_number", 2);
 		}
-		elsif (/^alias\s*([\w\.\-\_]*)\s*([\w\d\s]*)/i)
+		elsif (/^alias\s*([\w\.\-\_]*)\s*([\w\d\s]*)\s*$/i)
 		{
 			my @group = split(/\s+/,$2);
 			@{$aliases{$1}} = @group;
 			&log_debug("added group for $1 (" . join(", ",@{$aliases{$1}}) . ")", 2);
 		}
-		elsif (/^([\w\-]+)\s*(.*)/)
+		elsif (/^([\w\-]+)\s*(\S*)\s*$/)
 		{
 			my $key = $1;
 			my $value = $2;
@@ -821,10 +827,14 @@ sub get_carrier
 		use WWW::SMS::IE::vodasms;
 		return WWW::SMS::IE::vodasms->new;
 	}
-	else
+	elsif ($_[0] eq "o2")
 	{
 		use WWW::SMS::IE::o2sms;
 		return WWW::SMS::IE::o2sms->new;
+	}
+	else
+	{
+		&log_fatal("Invalid carrier name '" . $_[0] . "'");
 	}
 
 }
@@ -864,7 +874,7 @@ sub migrate_settings
 
 	return if (!&is_interactive());
 	
-	return if (!defined$ENV{HOME});
+	return if (!defined $ENV{HOME});
 
 	return if (!(
 		(-f $ENV{HOME} . "/.o2smsrc") || 

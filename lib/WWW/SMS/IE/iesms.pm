@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 261 2006-05-25 13:59:37Z mackers $
+# $Id: iesms.pm 275 2006-05-29 11:43:21Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,7 +51,7 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 261 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 275 $ =~ /(\d+)/);
 
 #use TestGen4Web::Runner 0.04;
 use File::stat;
@@ -116,9 +116,9 @@ sub _init_tg4w_runner
 
 	$self->{tg4w_runner} = new TestGen4Web::Runner(debug=>($self->debug()));
 
-	if ($self->{tg4w_runner}->VERSION < 0.04)
+	if ($self->{tg4w_runner}->VERSION < 0.07)
 	{
-		$self->_log_error("TestGen4Web::Runner version 0.04 or higher required");
+		$self->_log_error("TestGen4Web::Runner version 0.07 or higher required");
 
 		return 0;
 	}
@@ -162,9 +162,7 @@ sub login
 
 	if (defined($self->{tg4w_runner}->cookie_jar()))
 	{
-		$self->{tg4w_runner}->cookie_jar()->clear();
-		$self->{tg4w_runner}->cookie_jar()->save($self->{tg4w_runner}->cookie_jar_file());
-		$self->_log_debug("emptied cookie jar");
+		$self->_clear_cookie_jar();
 	}
 
 	$self->_log_debug("about to log in to '" . $self->domain_name() . "' with username '" . $self->username() . "' and password '" . $self->password() . "'");
@@ -179,6 +177,11 @@ sub login
 
 	$self->_log_debug("login " . ($retval?"succeeded":"failed with error '" . $self->error() . "'"));
 	$self->_log_debug(scalar(@{$self->{matches}}) . " matches found in last assertion");
+
+	if (!$retval)
+	{
+		$self->_clear_cookie_jar();
+	}
 
 	$self->_save_action_state();
 
@@ -906,6 +909,15 @@ sub _load_action_state
 	{
 		return 0;
 	}
+}
+
+sub _clear_cookie_jar
+{
+	my  $self = shift;
+
+	$self->{tg4w_runner}->cookie_jar()->clear();
+	unlink($self->{tg4w_runner}->cookie_jar_file());
+	$self->_log_debug("emptied cookie jar");
 }
 
 sub _log_debug

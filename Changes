@@ -1,5 +1,12 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.13		2006-06-12
+
+		Fixed bug when using the '-c' option.
+		Fixed bug with whitespace after config options.
+		Fixed bug with erroneous cookie re-use.
+		Fixed bug with specifying https_proxy on command line.
+
 3.12		2006-05-25
 
 		Fixed o2 support.
