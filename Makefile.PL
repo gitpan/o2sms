@@ -11,7 +11,7 @@ WriteMakefile(
 		Getopt::Long		=> 2.33,
 		Term::ReadLine		=> 0,
 		Storable		=> 0,
-		TestGen4Web::Runner	=> 0.07,
+		TestGen4Web::Runner	=> 0.08,
 		IO::Socket::SSL		=> 0,
 		Net::SSLeay		=> 0,
 		Crypt::SSLeay		=> 0,
@@ -52,6 +52,9 @@ publish-mackers.com: dist
 	/usr/bin/pod2html -title WWW::SMS::IE::meteorsms -htmlroot . lib/WWW/SMS/IE/meteorsms.pm > /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/docs/v3/WWW/SMS/IE/meteorsms.html
 	find . -name '*.tmp' | xargs rm
 	cp `ls -1t *.tar.gz | head -1` /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/releases/
+
+unpublish-debian:
+	/usr/bin/reprepro -Vb /var/www/hosts/apt.mackers.com/htdocs/ remove unstable o2sms
 
 exe:
 	set PERL5LIB=lib

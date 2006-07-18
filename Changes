@@ -1,5 +1,9 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.14		2006-07-18
+
+		Fixed vodafone support.
+		
 3.13		2006-06-12
 
 		Fixed bug when using the '-c' option.
