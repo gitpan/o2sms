@@ -1,5 +1,5 @@
 #
-# $Id: meteorsms.pm 249 2006-05-16 17:27:44Z mackers $
+# $Id: meteorsms.pm 285 2006-07-25 17:54:08Z mackers $
 
 package WWW::SMS::IE::meteorsms;
 
@@ -36,13 +36,13 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 249 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 285 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::meteorsms::ISA = qw{WWW::SMS::IE::iesms};
 
 use constant LOGIN_START_STEP => 0;
-use constant LOGIN_END_STEP => 7;
-use constant SEND_START_STEP => 8;
+use constant LOGIN_END_STEP => 6;
+use constant SEND_START_STEP => 7;
 use constant SEND_END_STEP => undef;
 use constant REMAINING_MESSAGES_MATCH => 1;
 use constant ACTION_FILE => "meteorsms.action";
@@ -93,6 +93,16 @@ sub is_meteor
 {
 	return 1;
 }
+
+sub _format_number
+{
+	my ($self, $number) = @_;
+
+	$number =~ s/^\+353/0/;
+
+	return $number;
+}
+
 
 =head1 DISCLAIMER
 
