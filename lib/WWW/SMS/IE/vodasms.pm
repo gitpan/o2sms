@@ -1,5 +1,5 @@
 #
-# $Id: vodasms.pm 249 2006-05-16 17:27:44Z mackers $
+# $Id: vodasms.pm 288 2006-08-01 18:04:33Z mackers $
 
 package WWW::SMS::IE::vodasms;
 
@@ -36,7 +36,7 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 249 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 288 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::vodasms::ISA = qw{WWW::SMS::IE::iesms};
 
@@ -71,21 +71,21 @@ sub _init
 
 	if ($self->is_win32())
 	{
-		$self->config_dir($self->_get_home_dir());
-		$self->config_file($self->config_dir() . "vodasms.ini");
-		$self->message_file($ENV{TMP} . "/vodasms_lastmsg.txt");
-		$self->history_file($ENV{TMP} . "/vodasms_history.txt");
-		$self->cookie_file($ENV{TMP} . "/vodasms.cookie");
-		$self->action_state_file($ENV{TMP} . "/vodasms.state");
+		$self->config_dir($ENV{TMP});
+		$self->config_file($self->_get_home_dir() . "vodasms.ini");
+		$self->message_file("vodasms_lastmsg.txt");
+		$self->history_file("vodasms_history.txt");
+		$self->cookie_file("vodasms.cookie");
+		$self->action_state_file("vodasms.state");
 	}
 	else
 	{
 		$self->config_dir($self->_get_home_dir() . "/.vodasms/");
-		$self->config_file($self->config_dir() . "config");
-		$self->message_file($self->config_dir() . "lastmsg");
-		$self->history_file($self->config_dir() . "history");
-		$self->cookie_file($self->config_dir() . ".cookie");
-		$self->action_state_file($self->config_dir() . ".state");
+		$self->config_file("config");
+		$self->message_file("lastmsg");
+		$self->history_file("history");
+		$self->cookie_file(".cookie");
+		$self->action_state_file(".state");
 	}
 }
 

@@ -26,6 +26,7 @@ sub MY::postamble {
 publish-cpan: dist 
 	echo "Going to upload " `ls -1t *.tar.gz | head -1`
 	sleep 2
+	echo "(Use furniture password or enter a world of pain!!)"
 	/usr/bin/cpan-upload -user mackers -mailto me@mackers.com -verbose `ls -1t *.tar.gz | head -1`
 
 debuild: META.yml dist

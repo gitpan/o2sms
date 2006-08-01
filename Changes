@@ -1,5 +1,9 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.17		2006-08-01
+
+		Added "--data-dir" option.
+
 3.16		2006-07-25
 
 		Added support for meteor's new site.

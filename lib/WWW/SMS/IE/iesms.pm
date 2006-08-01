@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 275 2006-05-29 11:43:21Z mackers $
+# $Id: iesms.pm 288 2006-08-01 18:04:33Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,7 +51,7 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 275 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 288 $ =~ /(\d+)/);
 
 #use TestGen4Web::Runner 0.04;
 use File::stat;
@@ -564,7 +564,7 @@ sub cookie_file
 	}
 	else
 	{
-		return $_[0]->{cookie_jar_file};
+		return $_[0]->_abs_cf($_[0]->{cookie_jar_file});
 	}
 }
 
@@ -576,18 +576,18 @@ sub action_state_file
 	}
 	else
 	{
-		return $_[0]->{action_state_file};
+		return $_[0]->_abs_cf($_[0]->{action_state_file});
 	}
 }
 
 sub message_file
 {
-	defined($_[1]) ? $_[0]->{message_file} = $_[1] : $_[0]->{message_file};
+	defined($_[1]) ? $_[0]->{message_file} = $_[1] : $_[0]->_abs_cf($_[0]->{message_file});
 }
 
 sub history_file
 {
-	defined($_[1]) ? $_[0]->{history_file} = $_[1] : $_[0]->{history_file};
+	defined($_[1]) ? $_[0]->{history_file} = $_[1] : $_[0]->_abs_cf($_[0]->{history_file});
 }
 
 =item $carrier->full_name()
@@ -663,13 +663,47 @@ Set/retrieve the location of the config dir/file.
 
 sub config_file
 {
-	defined($_[1]) ? $_[0]->{config_file} = $_[1] : $_[0]->{config_file};
+	defined($_[1]) ? $_[0]->{config_file} = $_[1] : $_[0]->_abs_cf($_[0]->{config_file});
 }
 
 
 sub config_dir
 {
-	defined($_[1]) ? $_[0]->{config_dir} = $_[1] : $_[0]->{config_dir};
+	my ($self, $dir) = @_;
+
+	if (!defined($dir))
+	{
+		return $self->{config_dir};
+	}
+
+	$dir .= "/" if ($dir !~ m#/$#);
+
+	if (-d $dir)
+	{
+		$self->{config_dir} = $dir;
+
+		return 1;
+	}
+	else
+	{
+		$self->_log_error("No such directory: $dir");
+
+		return 0;
+	}
+}
+
+sub _abs_cf
+{
+	my ($self, $filename) = @_;
+
+	if ($filename =~ m#^/#)
+	{
+		return $filename;
+	}
+	else
+	{
+		return $self->config_dir() . $filename;
+	}
 }
 
 =item $carrier->cookie_file()
@@ -678,8 +712,10 @@ sub config_dir
 
 =item $carrier->message_file()
 
+=item $carrier->history_file()
+
 These methods get/set the location of the files used by this module
-to store session data between invocations.
+to store session data between invocations and to log messages.
 
 =cut
 

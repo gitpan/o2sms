@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 282 2006-07-18 21:25:12Z mackers $
+# $Id: o2sms 288 2006-08-01 18:04:33Z mackers $
 
 =head1 o2sms
 
@@ -21,8 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 282 $ =~ m/(\d+)/);
-$VERSION = '3.16';
+#$VERSION = sprintf("3.%02d", q$Revision: 288 $ =~ m/(\d+)/);
+$VERSION = '3.17';
 
 # -- modules
 use File::stat;
@@ -44,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 282 2006-07-18 21:25:12Z mackers $';
+my $svnid = '$Id: o2sms 288 2006-08-01 18:04:33Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -55,6 +55,7 @@ my $password;
 my $message;
 my $signature = "";
 my $config_file;
+my $config_dir;
 my $http_proxy;
 my $https_proxy;
 my $carrier_name;
@@ -91,6 +92,7 @@ my %options = (
 	"message|m=s"	=> \$message_whole,
 	"sig|s=s"	=> \$signature,
 	"config-file|c=s" => \$config_file,
+	"data-dir=s" => \$config_dir,
 	"http-proxy|proxy|P=s"	=> \$http_proxy,
 	"https-proxy=s"	=> \$https_proxy,
 	"carrier|C=s"	=> \$carrier_name,
@@ -350,6 +352,16 @@ sub load_configuration
 	# set up carrier object 
 	$carrier = &get_carrier($carrier_name);
 
+	# if an alternative data directory was specified, use that now.
+	if (defined($config_dir))
+	{
+		if ($carrier->config_dir($config_dir))
+		{
+		}
+
+		&log_debug("using data dir: $config_dir");
+	}
+
 	#if (defined($config_file))
 	#{
 	#	&log_debug("using configuration file '$config_file'");
@@ -359,18 +371,25 @@ sub load_configuration
 	#	&log_debug("using default configuration file '" . $carrier->config_file() . "'");
 	#}
 
-	if (!defined($config_file) && (-f $carrier->config_file()))
+	if (!defined($config_file))
 	{
 		# read the default config file ...
-		if (!&read_config_file($carrier->config_file()))
+		if (!(-f $carrier->config_file()))
 		{
-			&log_error("can't read the configuration file '$config_file'");
+			&log_debug("No configuration file at '" . $carrier->config_file() . "'");
 		}
+		else
+		{
+			if (!&read_config_file($carrier->config_file()))
+			{
+				&log_error("can't read the configuration file '" . $carrier->config_file() . "'");
+			}
 
-		$config_file = $carrier->config_file();
+			$config_file = $carrier->config_file();
 
-		# ... and load the command line options again to overwrite defaults in config file
-		&process_command_line_options();
+			# ... and load the command line options again to overwrite defaults in config file
+			&process_command_line_options();
+		}
 	}
 
 	# set embedded options
@@ -1093,6 +1112,10 @@ Use this password (it omitted, will prompt for password)
 =item B<-c, --config-file=FILE>
 
 Use this configuration file (defaults to ~/.o2sms/config)
+
+=item B<--data-dir=DIR>
+
+Use this dir for cookie files, state files and log files. (defaults to ~/.o2sms/)
 
 =item B<-r, --reuse-cookies>
 
