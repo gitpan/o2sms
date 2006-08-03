@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 288 2006-08-01 18:04:33Z mackers $
+# $Id: iesms.pm 289 2006-08-03 20:53:05Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,7 +51,7 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 288 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 289 $ =~ /(\d+)/);
 
 #use TestGen4Web::Runner 0.04;
 use File::stat;
@@ -127,7 +127,7 @@ sub _init_tg4w_runner
 	$self->{tg4w_runner}->verify_titles(TG4W_VERIFY_TITLES);
 	$self->{tg4w_runner}->quiet(TG4W_QUIET);
 	$self->{tg4w_runner}->load($self->_action_file());
-	$self->{tg4w_runner}->cookie_jar_file($self->{cookie_jar_file});
+	$self->{tg4w_runner}->cookie_jar_file($self->cookie_file());
 	$self->{tg4w_runner}->debug($self->{debug});
 
 	return 1;

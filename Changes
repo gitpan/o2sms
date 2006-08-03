@@ -1,5 +1,9 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.18		2006-08-03
+
+		Fixed bug introduced in previous release where logins weren't being re-used.
+
 3.17		2006-08-01
 
 		Added "--data-dir" option.
