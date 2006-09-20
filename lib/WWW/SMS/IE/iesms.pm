@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 289 2006-08-03 20:53:05Z mackers $
+# $Id: iesms.pm 293 2006-08-10 23:05:38Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,7 +51,7 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 289 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 293 $ =~ /(\d+)/);
 
 #use TestGen4Web::Runner 0.04;
 use File::stat;
@@ -682,6 +682,8 @@ sub config_dir
 	{
 		$self->{config_dir} = $dir;
 
+		$self->_log_debug("using config dir '" . $dir . "'");
+
 		return 1;
 	}
 	else
@@ -700,9 +702,13 @@ sub _abs_cf
 	{
 		return $filename;
 	}
-	else
+	elsif ($self->config_dir())
 	{
 		return $self->config_dir() . $filename;
+	}
+	else
+	{
+		return $filename;
 	}
 }
 

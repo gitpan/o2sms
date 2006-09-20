@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms4w 287 2006-07-25 18:46:32Z mackers $
+# $Id: o2sms4w 290 2006-08-10 22:45:00Z mackers $
 
 use strict;
 use warnings;
@@ -13,8 +13,8 @@ use Getopt::Long 2.33;
 use vars qw( $VERSION );
 use Data::Dumper;
 
-$VERSION = sprintf("1.%02d", q$Revision: 287 $ =~ /(\d+)/);
-my $last_changed_date = $& if (q$LastChangedDate: 2006-07-25 19:46:32 +0100 (Tue, 25 Jul 2006) $ =~ /\d{4}-\d{2}-\d{2}/);
+$VERSION = sprintf("1.%02d", q$Revision: 290 $ =~ /(\d+)/);
+my $last_changed_date = $& if (q$LastChangedDate: 2006-08-10 23:45:00 +0100 (Thu, 10 Aug 2006) $ =~ /\d{4}-\d{2}-\d{2}/);
 
 # ..
 
@@ -299,8 +299,8 @@ sub LoginBut_Click
 	}
 	elsif ($carrierSel == 2)
 	{
-		#$carrier = new WWW::SMS::IE::meteorsms;
-		Error_MessageBox("Meteor not currently supported!"); return 1;
+		$carrier = new WWW::SMS::IE::meteorsms;
+		#Error_MessageBox("Meteor not currently supported!"); return 1;
 	}
 	
 	# set up carrier
