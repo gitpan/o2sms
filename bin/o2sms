@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 305 2006-09-20 13:47:44Z mackers $
+# $Id: o2sms 308 2006-10-11 13:49:14Z mackers $
 
 =head1 o2sms
 
@@ -21,8 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 305 $ =~ m/(\d+)/);
-$VERSION = '3.19';
+#$VERSION = sprintf("3.%02d", q$Revision: 308 $ =~ m/(\d+)/);
+$VERSION = '3.20';
 
 # -- modules
 use File::stat;
@@ -44,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 305 2006-09-20 13:47:44Z mackers $';
+my $svnid = '$Id: o2sms 308 2006-10-11 13:49:14Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -793,13 +793,14 @@ sub read_config_file
 			$aliases{$1} = $std_number;
 			&log_debug("added alias for $1 = $std_number", 2);
 		}
-		elsif (/^alias\s*([\w\.\-\_]*)\s*([\w\d\s]*)\s*$/i)
+		elsif (/^alias\s*([\w\.\-\_]*)\s*([\w\d\s\+]*)\s*$/i)
 		{
 			my @group = split(/\s+/,$2);
 			@{$aliases{$1}} = @group;
 			&log_debug("added group for $1 (" . join(", ",@{$aliases{$1}}) . ")", 2);
 		}
-		elsif (/^([\w\-]+)\s*(\S*)\s*$/)
+		elsif ((/^([\w\-]+)\s*(\S*)\s*$/) ||
+			(/^([\w\-]+)\s*"(.*?)"\s*$/))
 		{
 			my $key = $1;
 			my $value = $2;

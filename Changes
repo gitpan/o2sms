@@ -1,5 +1,10 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.20		??
+
+		Allowing "" around second arguments in config file.
+		Fixed bug with intl. numbers in groups.
+
 3.19		2006-09-20
 
 		Fixed small bug when missing config file.
