@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 293 2006-08-10 23:05:38Z mackers $
+# $Id: iesms.pm 312 2006-11-15 10:15:34Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,7 +51,7 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 293 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 312 $ =~ /(\d+)/);
 
 #use TestGen4Web::Runner 0.04;
 use File::stat;
@@ -229,6 +229,13 @@ sub _real_send
 
 	# format number how this operator likes it
 	$number = $self->_format_number($number);
+
+	# pad message with spaces if less than min_length
+	if (length($message) < $self->min_length())
+	{
+		$message .= " " x ($self->min_length() - length($message));
+		$self->_log_warning("padded message to " . $self->min_length() . " characters");
+	}
 
 	# trim message to max length (multiple messages should be handled by the client)
 	if (length($message) > $self->max_length())
@@ -441,6 +448,20 @@ sub max_length
 {
 	return 160;
 }
+
+=item $carrier->min_length()
+
+Return the supported minimum length of a single SMS message.
+
+This method can be overwritten by subclasses extending this class.
+
+=cut
+
+sub min_length
+{
+	return 0;
+}
+
 
 =item $carrier->remaining_messages()
 

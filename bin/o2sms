@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 308 2006-10-11 13:49:14Z mackers $
+# $Id: o2sms 312 2006-11-15 10:15:34Z mackers $
 
 =head1 o2sms
 
@@ -21,8 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 308 $ =~ m/(\d+)/);
-$VERSION = '3.20';
+#$VERSION = sprintf("3.%02d", q$Revision: 312 $ =~ m/(\d+)/);
+$VERSION = '3.21';
 
 # -- modules
 use File::stat;
@@ -44,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 308 2006-10-11 13:49:14Z mackers $';
+my $svnid = '$Id: o2sms 312 2006-11-15 10:15:34Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -632,27 +632,6 @@ sub process_message
 
 	return @message_parts;
 }
-
-#      # -- check return values
-#      if (defined($retval) && ($retval == -1)) {
-#        # unknown repsonse.
-#        print STDERR "[ message sending failed; unknown response from server ]\n";
-#	$failed = 1;
-#      } elsif ($retval == -2) {
-#	# message sent, but we don't know how many are left
-#        print "[ message$partmsg sent to $number, ? remaining this month ]\n";
-#      } elsif ($retval == 0) {
-#        # 0 messages left - probably failed sending
-#        print STDERR "[ message sending failed; malformed message or no messages remaining this month ]\n";
-#        $failed = 1;
-#      } elsif ($retval > 0) {
-#        # message send successful
-#        print "[ message$partmsg sent to $number, $retval remaining this month ]\n";
-#      } else {
-#        # unknown negative response
-#        print STDERR "[ message sending failed ]\n";
-#	$failed = 1;
-#      }
 
 # -- save alias
 sub save_aliases

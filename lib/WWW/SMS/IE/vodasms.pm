@@ -1,5 +1,5 @@
 #
-# $Id: vodasms.pm 288 2006-08-01 18:04:33Z mackers $
+# $Id: vodasms.pm 312 2006-11-15 10:15:34Z mackers $
 
 package WWW::SMS::IE::vodasms;
 
@@ -36,7 +36,7 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 288 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 312 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::vodasms::ISA = qw{WWW::SMS::IE::iesms};
 
@@ -49,6 +49,7 @@ use constant ACTION_FILE => "vodasms.action";
 use constant SIMULATED_DELAY_MIN => 10;
 use constant SIMULATED_DELAY_MAX => 35;
 use constant SIMULATED_DELAY_PERCHAR => 0.25;
+use constant MINIMUM_MESSAGE_LENGTH => 3;
 
 sub _init
 {
@@ -109,6 +110,11 @@ sub _is_valid_number
 	}
 
 	return 1;
+}
+
+sub min_length
+{
+        return MINIMUM_MESSAGE_LENGTH;
 }
 
 sub is_vodafone

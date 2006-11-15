@@ -1,6 +1,11 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
-3.20		??
+3.21		2006-11-15
+
+		Fix for o2.
+		Min_length for voda.
+
+3.20		2006-10-11
 
 		Allowing "" around second arguments in config file.
 		Fixed bug with intl. numbers in groups.
