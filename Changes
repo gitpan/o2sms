@@ -1,5 +1,11 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.22		2006-12-05
+
+		Fixed bug with saving alias when no config file.
+		Manpage improvements.
+		Fixed bug with not detecting successful o2 logins correctly.
+
 3.21		2006-11-15
 
 		Fix for o2.

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 312 2006-11-15 10:15:34Z mackers $
+# $Id: o2sms 313 2006-12-05 17:25:10Z mackers $
 
 =head1 o2sms
 
@@ -21,8 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 312 $ =~ m/(\d+)/);
-$VERSION = '3.21';
+#$VERSION = sprintf("3.%02d", q$Revision: 313 $ =~ m/(\d+)/);
+$VERSION = '3.22';
 
 # -- modules
 use File::stat;
@@ -44,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 312 2006-11-15 10:15:34Z mackers $';
+my $svnid = '$Id: o2sms 313 2006-12-05 17:25:10Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -643,6 +643,11 @@ sub save_aliases
 		return;
 	}
 
+	if (!defined($config_file))
+	{
+		return;
+	}
+
 	RECIPIENT: while (my ($number, $name) = each(%recipients))
 	{
 		ALIAS: foreach my $anumber (values %aliases)
@@ -1076,6 +1081,10 @@ __END__
 =head1 SYNOPSIS
 
   o2sms [options] <number|alias|group> [<number|alias|group> ...]
+
+  The message will be read from standard input; either pipe some text
+  or type the message, ending with CTRL-d or the . character on a line
+  by itself.
 
 =head1 OPTIONS
 
