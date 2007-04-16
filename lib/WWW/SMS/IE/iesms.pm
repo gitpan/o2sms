@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 312 2006-11-15 10:15:34Z mackers $
+# $Id: iesms.pm 316 2007-01-13 23:04:52Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,7 +51,7 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 312 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 316 $ =~ /(\d+)/);
 
 #use TestGen4Web::Runner 0.04;
 use File::stat;
@@ -87,7 +87,7 @@ my %iesms_user_agent_strings = (
 This is the object constructor. It should only be called internally
 by this library. External code should construct 
 L<WWW::SMS::IE::o2sms>, L<WWW::SMS::IE::vodasms> and L<WWW::SMS::IE::meteorsms> 
-objects.
+(and L<WWW::SMS::IE::aftsms>) objects.
 
 =cut
 
@@ -249,9 +249,11 @@ sub _real_send
 	{
 		if (!$self->_load_action_state())
 		{
-			$self->error("Failed to load action state file");
 			$self->_log_debug("Failed to load action state file");
-			return 0;
+
+			# is this so bad? - action state files only needed for re-using logins...
+			#$self->error("Failed to load action state file");
+			#return 0;
 		}
 	}
 
@@ -262,6 +264,8 @@ sub _real_send
 	$self->{tg4w_runner}->set_replacement("message", $message);
 	$self->{tg4w_runner}->set_replacement("delay", $self->delay($message));
 	$self->{tg4w_runner}->set_replacement("charsleft", $charsleft);
+	$self->{tg4w_runner}->set_replacement("username", $self->{username});
+	$self->{tg4w_runner}->set_replacement("password", $self->{password});
 	
 	$self->remaining_messages('?');
 
@@ -341,6 +345,10 @@ sub validate_number
 	{
 		# is an 00 international number -- make plus
 		$number = "+$1";
+	}
+	elsif ($number =~ /959\d{2,5}/)
+	{
+		# is an aft 959xxxx number
 	}
 	else
 	{
@@ -631,11 +639,13 @@ sub domain_name
 	defined($_[1]) ? $_[0]->{domain_name} = $_[1] : $_[0]->{domain_name};
 }
 
-=item $carrier->is_vodadone()
+=item $carrier->is_vodafone()
 
 =item $carrier->is_o2()
 
 =item $carrier->is_meteor()
+
+=item $carrier->is_aft()
 
 These methods are used to determine what subclass is extending this class.
 
@@ -652,6 +662,11 @@ sub is_o2
 }
 
 sub is_meteor
+{
+	return 0;
+}
+
+sub is_aft
 {
 	return 0;
 }
@@ -709,7 +724,7 @@ sub config_dir
 	}
 	else
 	{
-		$self->_log_error("No such directory: $dir");
+		$self->_log_warning("No such directory: $dir");
 
 		return 0;
 	}
@@ -1018,7 +1033,8 @@ provider before using the program.
 
 L<WWW::SMS::IE::o2sms>,
 L<WWW::SMS::IE::vodasms>,
-L<WWW::SMS::IE::meteorsms> 
+L<WWW::SMS::IE::meteorsms>,
+L<WWW::SMS::IE::aftsms> 
 
 L<http://www.mackers.com/projects/o2sms/>
 

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 313 2006-12-05 17:25:10Z mackers $
+# $Id: o2sms 317 2007-04-16 01:05:50Z mackers $
 
 =head1 o2sms
 
@@ -21,8 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 313 $ =~ m/(\d+)/);
-$VERSION = '3.22';
+#$VERSION = sprintf("3.%02d", q$Revision: 317 $ =~ m/(\d+)/);
+$VERSION = '3.24';
 
 # -- modules
 use File::stat;
@@ -44,7 +44,7 @@ use constant EXIT_SUCCESS => 1;
 use constant EXIT_FAILURE => 0;
 
 # -- global vars
-my $svnid = '$Id: o2sms 313 2006-12-05 17:25:10Z mackers $';
+my $svnid = '$Id: o2sms 317 2007-04-16 01:05:50Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -272,6 +272,10 @@ sub guess_carrier_name
 	{
 		return "o2";
 	}
+	elsif ($0 =~ m/aft(sms)?(\.pl)?$/i)
+	{
+		return "aft";
+	}
 	else
 	{
 		return undef;
@@ -468,7 +472,7 @@ sub process_recipients
 	{
 		$recip = $recips2[$i];
 
-		if ($recip =~ m/[^\d\+]/)
+		if ($recip =~ m/[^\d\s\-\+]/)
 		{
 			# has non-numeric character - might be alias
 			if (exists($aliases{$recip}))
@@ -484,6 +488,8 @@ sub process_recipients
 		else
 		{
 			my $recip_name = "";
+
+                        $recip =~ s/[\s\-]//;
 
 			# user provided number -- alias might exist
 			while (my ($name, $number) = each(%aliases))
@@ -836,6 +842,11 @@ sub get_carrier
 		use WWW::SMS::IE::o2sms;
 		return WWW::SMS::IE::o2sms->new;
 	}
+	elsif ($_[0] eq "aft")
+	{
+		use WWW::SMS::IE::aftsms;
+		return WWW::SMS::IE::aftsms->new;
+	}
 	else
 	{
 		&log_fatal("Invalid carrier name '" . $_[0] . "'");
@@ -1140,7 +1151,7 @@ Append this text to every message
 
 =item B<-C, --carrier=NAME>
 
-Force the carrier to be this ("o2", "vodafone" or "meteor")
+Force the carrier to be this ("o2", "vodafone" or "meteor" (or "aft"))
 
 =item B<-m, --message=STRING>
 
@@ -1152,7 +1163,7 @@ Keep a history file (in ~/.o2sms/history)
 
 =item B<--embedded>
 
-Embedded mode, turn off input and output
+Embedded mode, don't prompt for anything.
 
 =item B<-h, --help>
 
@@ -1171,8 +1182,8 @@ Print version and exit
 =head1 CONFIGURATION FILE
 
 Configuration is in the file C<~/.o2sms/config> (or C<~/.vodasms/config> or
-C<~/.meteorsms/config>) or can be overwritten with the -c / --config-file
-command line option.
+C<~/.meteorsms/config>) (or C<~/.aftsms/config>) or can be overwritten with
+the -c / --config-file command line option.
 
 Values in this file are stored as one per line and take the same name and
 format as their command line equivalents.
@@ -1194,6 +1205,7 @@ Configuration file example:
 L<WWW::SMS::IE::iesms>,
 L<WWW::SMS::IE::o2sms>,
 L<WWW::SMS::IE::vodasms>,
+L<WWW::SMS::IE::aftsms>,
 L<WWW::SMS::IE::meteorsms> 
 
 L<http://www.mackers.com/projects/o2sms/>

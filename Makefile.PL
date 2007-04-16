@@ -6,7 +6,7 @@ WriteMakefile(
 	ABSTRACT	=> 'A module to send SMS messages using .ie websites',
 	AUTHOR		=> 'mackers',
 	VERSION_FROM	=> 'bin/o2sms',
-	EXE_FILES     => [ 'bin/o2sms', 'bin/vodasms', 'bin/meteorsms' ],
+	EXE_FILES     => [ 'bin/o2sms', 'bin/vodasms', 'bin/meteorsms', 'bin/aftsms' ],
 	PREREQ_PM	=> {
 		Getopt::Long		=> 2.33,
 		Term::ReadLine		=> 0,
