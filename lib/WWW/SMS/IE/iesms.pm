@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 316 2007-01-13 23:04:52Z mackers $
+# $Id: iesms.pm 323 2007-05-17 11:37:36Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,7 +51,7 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 316 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 323 $ =~ /(\d+)/);
 
 #use TestGen4Web::Runner 0.04;
 use File::stat;
@@ -724,7 +724,7 @@ sub config_dir
 	}
 	else
 	{
-		$self->_log_warning("No such directory: $dir");
+		#$self->_log_warning("No such directory: $dir");
 
 		return 0;
 	}
@@ -734,7 +734,11 @@ sub _abs_cf
 {
 	my ($self, $filename) = @_;
 
-	if ($filename =~ m#^/#)
+	if ($filename eq "")
+	{
+		return "";
+	}
+	elsif ($filename =~ m#^/#)
 	{
 		return $filename;
 	}

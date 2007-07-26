@@ -1,8 +1,16 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.25		2007-07-26
+
+                Improvements for embedded mode.
+                Some proxy use disambiguation code.
+                Retrying on login timeout after message sending failed.
+                Working meteorsms.action
+
 3.24		2007-04-16
 
 		Allowing whitespace and hyphens in numbers.
+                Setting env error status.
 
 3.23		2007-01-13
 

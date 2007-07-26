@@ -17,90 +17,120 @@
             <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="pin"]]]></xpath>
             <value><![CDATA[{password}]]></value>
         </action>
-        
-        <action type="click" refresh="true" step="4">
+
+        <action type="wait" refresh="" window="." step="4">
+             <xpath><![CDATA[]]></xpath>
+             <value><![CDATA[10]]></value>
+        </action>
+                                                
+        <action type="click" refresh="true" step="5">
             <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="business_r29_c52"]]]></xpath>
             <value><![CDATA[business_r29_c52]]></value>
         </action>
-        <action type="verify-title" step="5">
+        <action type="wait" refresh="" window="." step="6">
+             <xpath><![CDATA[]]></xpath>
+             <value><![CDATA[10]]></value>
+        </action>
+
+
+        <action type="verify-title" step="7">
             <xpath><![CDATA[*]]></xpath>
             <value><![CDATA[My Meteor Manage your Account]]></value>
         </action>
-        <action type="assert-text-exists" step="6">
+        <action type="assert-text-exists" step="8">
             <xpath><![CDATA[*]]></xpath>
             <value><![CDATA[Send free texts to any]]></value>
         </action>
-        <action type="click" refresh="true" step="7">
-            <xpath><![CDATA[*/*/A[@CDATA="Send free texts to any"]]]></xpath>
-            <value><![CDATA[]]></value>
+        <action type="wait" refresh="" window="." step="9">
+             <xpath><![CDATA[]]></xpath>
+             <value><![CDATA[10]]></value>
         </action>
 
-
-        <action type="verify-title" step="8">
+        
+        <action type="click" refresh="" step="10">
+            <xpath><![CDATA[*/TABLE[1]/TBODY[1]/TR[9]/TD[3]/TABLE[1]/TBODY[1]/TR[1]/TD[1]/TABLE[1]/TBODY[1]/TR[1]/TD[1]/TABLE[1]/TBODY[1]/TR[1]/TD[1]/TABLE[1]/TBODY[1]/TR[1]/TD[1]/TABLE[1]/TBODY[1]/TR[1]/TD[1]/TABLE[1]/TBODY[1]/TR[2]/TD[1]/*/A[@CDATA="Send free texts to"]]]></xpath>
+            <value><![CDATA[]]></value>
+        </action>
+        <action type="verify-title" step="11">
             <xpath><![CDATA[*]]></xpath>
             <value><![CDATA[My Meteor Manage your Account]]></value>
         </action>
-        <action type="assert-text-exists" step="9">
+        <action type="assert-text-exists" step="12">
                <xpath><![CDATA[*]]></xpath> 
            <value><![CDATA[You have <b>(\d+)</b> Free Web Texts]]></value>
         </action>
                                                      
 
-        <action type="fill" step="10">
+        <action type="fill" step="13">
             <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="msisdn"]]]></xpath>
             <value><![CDATA[{recipient}]]></value>
         </action>
-        <action type="fill" step="11">
+        <action type="fill" step="14">
             <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="method"]]]></xpath>
             <value><![CDATA[SMS]]></value>
         </action>
         
         
-        <action type="fill" step="12">
+        <action type="fill" step="15">
             <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="formName"]]]></xpath>
             <value><![CDATA[smsForm]]></value>
         </action>
         
-        <action type="fill" step="13">
+        <action type="fill" step="16">
             <xpath><![CDATA[*/FORM[2]/*/TEXTAREA[@NAME="sms_text"]]]></xpath>
             <value><![CDATA[{message}]]></value>
         </action>
 
-        <action type="fill" step="14">
+        <action type="fill" step="17">
             <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="action"]]]></xpath>
             <value><![CDATA[Send SMS]]></value>
         </action>
         
-        <action type="fill" step="15">
+        <action type="fill" step="18">
            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="returnTo"]]]></xpath>
            <value><![CDATA[/mymeteor/system/view/sms.cfm]]></value>
         </action>
+        <action type="wait" refresh="" window="." step="19">
+             <xpath><![CDATA[]]></xpath>
+             <value><![CDATA[20]]></value>
+        </action>
 
-        <action type="click" refresh="true" step="16">
+
+        <action type="click" refresh="true" step="20">
             <xpath><![CDATA[[*/FORM[2]/*/INPUT[@NAME="sendSMS" and @ID="smsForm"]]]></xpath>
             <value><![CDATA[sendSMS]]></value>
         </action>
 
-        <action type="verify-title" step="17">
+        <action type="verify-title" step="21">
             <xpath><![CDATA[*]]></xpath>
             <value><![CDATA[My Meteor Manage your Account]]></value>
         </action>
 
-        <action type="assert-text-exists" step="18">
+        <action type="assert-text-exists" step="22">
                     <xpath><![CDATA[*]]></xpath>
                  <value><![CDATA[Your text message is being sent]]></value>
         </action>
+
+        <action type="wait" refresh="" window="." step="23">
+             <xpath><![CDATA[]]></xpath>
+             <value><![CDATA[12]]></value>
+        </action>
         
-        <action type="click" refresh="true" step="19">
+        <action type="click" refresh="true" step="24">
             <xpath><![CDATA[*/*/A[@CDATA="Send Another Free SMS"]]]></xpath>
             <value><![CDATA[]]></value>
         </action>
         
-        <action type="verify-title" step="20">
+        <action type="wait" refresh="" window="." step="23">
+             <xpath><![CDATA[]]></xpath>
+             <value><![CDATA[10]]></value>
+        </action>
+
+        <action type="verify-title" step="25">
             <xpath><![CDATA[*]]></xpath>
             <value><![CDATA[My Meteor Manage your Account]]></value>
         </action>
-        <action type="assert-text-exists" step="21">
+        <action type="assert-text-exists" step="26">
                <xpath><![CDATA[*]]></xpath>
            <value><![CDATA[You have <b>(\d+)</b> Free Web Texts]]></value>
         </action>
@@ -109,3 +139,4 @@
 
     </actions>
 </tg4w>
+

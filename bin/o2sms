@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: o2sms 317 2007-04-16 01:05:50Z mackers $
+# $Id: o2sms 328 2007-07-26 11:33:20Z mackers $
 
 =head1 o2sms
 
@@ -21,8 +21,8 @@ provider before using the program.
 use strict;
 use warnings;
 use vars qw( $VERSION );
-#$VERSION = sprintf("3.%02d", q$Revision: 317 $ =~ m/(\d+)/);
-$VERSION = '3.24';
+#$VERSION = sprintf("3.%02d", q$Revision: 328 $ =~ m/(\d+)/);
+$VERSION = '3.25';
 
 # -- modules
 use File::stat;
@@ -40,11 +40,11 @@ use constant OUTPUT_AUTOFLUSH_BUFFERED  => 0;
 use constant OUTPUT_AUTOFLUSH_UNBUFFERED => 1;
 use constant OFF => 0;
 use constant ON => 1;
-use constant EXIT_SUCCESS => 1;
-use constant EXIT_FAILURE => 0;
+use constant EXIT_SUCCESS => 0; 
+use constant EXIT_FAILURE => 1; # shell error status
 
 # -- global vars
-my $svnid = '$Id: o2sms 317 2007-04-16 01:05:50Z mackers $';
+my $svnid = '$Id: o2sms 328 2007-07-26 11:33:20Z mackers $';
 
 my $sms_max_length = 500;
 my $man_delim = "\\\\\\\\";
@@ -238,6 +238,21 @@ NUMBER: foreach my $number (keys(%recipients))
 				{
 					&log_fatal("okay, I'm outta here");
 				}
+                                else
+                                {
+                                    if (!$carrier->is_logged_in())
+                                    {
+                                        # user has been logged out in the time it took to get a y/n - log in again
+                                        &log_info("login timeout; attempting a relogin ...");
+
+                                        my $retval = $carrier->login($username, $password);
+
+                                        if (!$retval)
+                                        {
+                                            &log_fatal("relogin failed; " . $carrier->error());
+                                        }
+                                    }
+                                }
 			}
 		}
 
@@ -357,7 +372,11 @@ sub load_configuration
 	$carrier = &get_carrier($carrier_name);
 
 	# if an alternative data directory was specified, use that now.
-	if (defined($config_dir))
+	if ($embedded == ON)
+	{
+		$carrier->config_dir("/tmp/"); # won't be used in embedded mode anyway
+	}
+	elsif (defined($config_dir))
 	{
 		if ($carrier->config_dir($config_dir))
 		{
@@ -400,6 +419,8 @@ sub load_configuration
 	if ($embedded == ON)
 	{
 		$| = OUTPUT_AUTOFLUSH_UNBUFFERED; 
+		$carrier->history_file("");
+		$carrier->message_file("");
 	}
 
 	# adjust the adjusted max length (with sig)
@@ -422,7 +443,7 @@ sub load_configuration
 	}
 
 	# proxy setting up
-	if (defined($http_proxy))
+	if (defined($http_proxy) && $http_proxy ne "")
 	{
 		$carrier->user_agent()->proxy('http', $http_proxy);
 
@@ -440,6 +461,11 @@ sub load_configuration
 			#$carrier->user_agent()->proxy('https', $http_proxy);
 		}
 	}
+        else
+        {
+            # user hasn't specified proxy - let user agent decide what proxy to use
+            $carrier->user_agent()->env_proxy(1);
+        }
 
 	# do any other carrier setting up stuff
 	$carrier->debug($debug_level);
@@ -1069,6 +1095,7 @@ sub log_error
 sub log_fatal
 {
 	print STDERR "[ $_[0] ]\n" if ($_[0]);
+        $? = EXIT_FAILURE;
 	exit(EXIT_FAILURE);
 }
 
