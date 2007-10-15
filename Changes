@@ -1,5 +1,9 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.26		2007-10-15
+
+                Update for new vodafone site.
+
 3.25		2007-07-26
 
                 Improvements for embedded mode.

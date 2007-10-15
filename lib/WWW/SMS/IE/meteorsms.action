@@ -121,16 +121,16 @@
             <value><![CDATA[]]></value>
         </action>
         
-        <action type="wait" refresh="" window="." step="23">
+        <action type="wait" refresh="" window="." step="25">
              <xpath><![CDATA[]]></xpath>
              <value><![CDATA[10]]></value>
         </action>
 
-        <action type="verify-title" step="25">
+        <action type="verify-title" step="26">
             <xpath><![CDATA[*]]></xpath>
             <value><![CDATA[My Meteor Manage your Account]]></value>
         </action>
-        <action type="assert-text-exists" step="26">
+        <action type="assert-text-exists" step="27">
                <xpath><![CDATA[*]]></xpath>
            <value><![CDATA[You have <b>(\d+)</b> Free Web Texts]]></value>
         </action>
