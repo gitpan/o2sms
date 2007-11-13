@@ -1,5 +1,11 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.26		2007-11-13
+
+                Fix for o2.
+                Creating config_dir if possible.
+                Improved behaviour in cases where config_dir can't be created or written to.
+
 3.26		2007-10-15
 
                 Update for new vodafone site.

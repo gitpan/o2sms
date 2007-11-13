@@ -27,7 +27,7 @@ publish-cpan: dist
 	echo "Going to upload " `ls -1t *.tar.gz | head -1`
 	sleep 2
 	echo "(Use furniture password or enter a world of pain!!)"
-	/usr/bin/cpan-upload -user mackers -mailto me@mackers.com -verbose `ls -1t *.tar.gz | head -1`
+	/usr/local/bin/cpan-upload -user mackers -mailto me@mackers.com -verbose `ls -1t *.tar.gz | head -1`
 
 debuild: META.yml dist
 	mkdir /tmp/debuild-o2sms/
@@ -44,6 +44,7 @@ publish-debian: dist debuild
 	echo "Going to upload" `ls -1t debuild/*.changes | head -1`
 	sleep 2
 	/usr/bin/reprepro -Vb /var/www/hosts/apt.mackers.com/htdocs/ include unstable `ls -1t debuild/*.changes | head -1` 
+	find /var/www/hosts/apt.mackers.com/htdocs/ -name 'Release' -exec gpg -abs -o '{}.gpg' '{}' \;
 
 publish-mackers.com: dist
 	/usr/bin/pod2html -title o2sms -htmlroot . bin/o2sms  > /var/www/hosts/www.mackers.com/htdocs/projects/o2sms/docs/v3/usage.html

@@ -1,5 +1,5 @@
 #
-# $Id: iesms.pm 323 2007-05-17 11:37:36Z mackers $
+# $Id: iesms.pm 333 2007-11-13 11:20:05Z mackers $
 
 package WWW::SMS::IE::iesms;
 
@@ -51,12 +51,13 @@ The following methods are available:
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 323 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 333 $ =~ /(\d+)/);
 
 #use TestGen4Web::Runner 0.04;
 use File::stat;
 use Storable;
 use File::Basename;
+use File::Temp;
 use POSIX qw(ceil);
 use Data::Dumper;
 
@@ -127,8 +128,16 @@ sub _init_tg4w_runner
 	$self->{tg4w_runner}->verify_titles(TG4W_VERIFY_TITLES);
 	$self->{tg4w_runner}->quiet(TG4W_QUIET);
 	$self->{tg4w_runner}->load($self->_action_file());
-	$self->{tg4w_runner}->cookie_jar_file($self->cookie_file());
 	$self->{tg4w_runner}->debug($self->{debug});
+
+        if ($self->cookie_file() =~ m#/#)
+        {
+                $self->{tg4w_runner}->cookie_jar_file($self->cookie_file());
+        }
+        else
+        {
+                $self->_log_debug("won't write '" . $self->cookie_file() . "' to working directory");
+        }
 
 	return 1;
 }
@@ -498,7 +507,11 @@ sub write_message_file
 
 	if ($msgfile = $self->message_file())
 	{
-		if (open (SMSMSG, "> $msgfile"))
+                if ($msgfile !~ m#/#)
+                {
+			$self->_log_debug("won't write '$msgfile' to working directory");
+                }
+		elsif (open (SMSMSG, "> $msgfile"))
 		{
 			print SMSMSG $message . "\n";
 			close (SMSMSG);
@@ -529,7 +542,11 @@ sub write_history_file
 
 	if ($histfile = $self->history_file())
 	{
-		if (open (SMSMSG, ">> $histfile"))
+                if ($histfile !~ m#/#)
+                {
+			$self->_log_debug("won't write '$histfile' to working directory");
+                }
+		elsif (open (SMSMSG, ">> $histfile"))
 		{
 			print SMSMSG "-- to $recipient at " . localtime() . " --\n";
 			print SMSMSG $message . "\n";
@@ -599,13 +616,16 @@ sub cookie_file
 
 sub action_state_file
 {
-	if (defined($_[1]))
+        my $self = $_[0];
+	my $action_state_file = $_[1];
+
+	if (defined($action_state_file))
 	{
-		$_[0]->{action_state_file} = $_[1];
+		$self->{action_state_file} = $action_state_file;
 	}
 	else
 	{
-		return $_[0]->_abs_cf($_[0]->{action_state_file});
+		return $self->_abs_cf($self->{action_state_file});
 	}
 }
 
@@ -724,9 +744,21 @@ sub config_dir
 	}
 	else
 	{
-		#$self->_log_warning("No such directory: $dir");
+                # create config dir, failing silently if can't
 
-		return 0;
+                my $retval = mkdir($dir, 0700);
+
+                if ($retval)
+                {
+                        $self->_log_debug("Created config directory '$dir'");
+                        $self->{config_dir} = $dir;
+                }
+                else
+                {
+                        $self->_log_debug("Could not create config directory '$dir': $!");
+                }
+                
+		return $retval;
 	}
 }
 
@@ -970,14 +1002,25 @@ sub _action_file
 
 sub _save_action_state
 {
-	if ($_[0]->{tg4w_runner}->action_state())
-	{
-		return store($_[0]->{tg4w_runner}->action_state(), $_[0]->action_state_file());
-	}
-	else
-	{
-		return 0;
-	}
+	my $action_state_file;
+        my $self = $_[0];
+
+        if ($action_state_file = $self->action_state_file())
+        {
+                if ($action_state_file !~ m#/#)
+                {
+			$self->_log_debug("won't write '$action_state_file' to working directory");
+                        return 0;
+                }
+                elsif ($self->{tg4w_runner}->action_state())
+                {
+                        return store($self->{tg4w_runner}->action_state(), $action_state_file);
+                }
+                else
+                {
+                        return 0;
+                }
+        }
 }
 
 sub _load_action_state
@@ -998,7 +1041,12 @@ sub _clear_cookie_jar
 	my  $self = shift;
 
 	$self->{tg4w_runner}->cookie_jar()->clear();
-	unlink($self->{tg4w_runner}->cookie_jar_file());
+        
+        if ($self->{tg4w_runner}->cookie_jar_file() && -f $self->{tg4w_runner}->cookie_jar_file())
+        {
+                unlink($self->{tg4w_runner}->cookie_jar_file());
+        }
+
 	$self->_log_debug("emptied cookie jar");
 }
 

@@ -27,7 +27,7 @@
         </action>
         <action type="assert-text-exists" refresh="true" step="6">
             <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[Your My O2 home page]]></value>
+            <value><![CDATA[Thank you for logging in to O2.ie]]></value>
         </action>
         <action type="click" refresh="true" step="7">
             <xpath><![CDATA[*/A[@CDATA="Webtext"]]]></xpath>
