@@ -33,10 +33,10 @@
         </action>
         <action type="assert-text-exists" window="." step="7">
             <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[Personalise welcome message]]></value>
+            <value><![CDATA[Welcome]]></value>
         </action>
         <action type="click" refresh="." window="." step="8">
-            <xpath><![CDATA[*/A[@CDATA="Web texts"]]]></xpath>
+            <xpath><![CDATA[*/A[@CDATA="Webtext"]]]></xpath>
             <value><![CDATA[]]></value>
         </action>
         <action type="verify-title" window="." step="9">
@@ -68,7 +68,7 @@
         </action>
         <action type="assert-text-exists" window="." step="16">
             <xpath><![CDATA[*]]></xpath>
-            <value><![CDATA[Remaining messages this month: <span class="msg-total">(\d+)]]></value>
+            <value><![CDATA[Remaining messages this month <strong>(\d+)]]></value>
         </action>
     </actions>
 </tg4w>

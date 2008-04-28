@@ -1,70 +1,75 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
-3.26		2007-11-13
+3.28		2008-04-28
 
-                Fix for o2.
-                Creating config_dir if possible.
-                Improved behaviour in cases where config_dir can't be created or written to.
+        Fix for vodafone.
+
+
+3.27		2007-11-13
+
+        Fix for o2.
+        Creating config_dir if possible.
+        Improved behaviour in cases where config_dir can't be created or written to.
 
 3.26		2007-10-15
 
-                Update for new vodafone site.
+        Update for new vodafone site.
 
 3.25		2007-07-26
 
-                Improvements for embedded mode.
-                Some proxy use disambiguation code.
-                Retrying on login timeout after message sending failed.
-                Working meteorsms.action
+        Improvements for embedded mode.
+        Some proxy use disambiguation code.
+        Retrying on login timeout after message sending failed.
+        Working meteorsms.action
 
 3.24		2007-04-16
 
-		Allowing whitespace and hyphens in numbers.
-                Setting env error status.
+        Allowing whitespace and hyphens in numbers.
+        Setting env error status.
 
 3.23		2007-01-13
 
-		Support for AFT.
+        Support for AFT.
 
 3.22		2006-12-05
 
-		Fixed bug with saving alias when no config file.
-		Manpage improvements.
-		Fixed bug with not detecting successful o2 logins correctly.
+        Fixed bug with saving alias when no config file.
+        Manpage improvements.
+        Fixed bug with not detecting successful o2 logins correctly.
 
 3.21		2006-11-15
 
-		Fix for o2.
-		Min_length for voda.
+        Fix for o2.
+        Min_length for voda.
 
 3.20		2006-10-11
 
-		Allowing "" around second arguments in config file.
-		Fixed bug with intl. numbers in groups.
+        Allowing "" around second arguments in config file.
+        Fixed bug with intl. numbers in groups.
 
 3.19		2006-09-20
 
-		Fixed small bug when missing config file.
+        Fixed small bug when missing config file.
 
 3.18		2006-08-03
 
-		Fixed bug introduced in previous release where logins weren't being re-used.
+        Fixed bug introduced in previous release where logins weren't being re-used.
 
 3.17		2006-08-01
 
-		Added "--data-dir" option.
+        Added "--data-dir" option.
 
 3.16		2006-07-25
 
-		Added support for meteor's new site.
+        Added support for meteor's new site.
 
 3.15		2006-07-18
 
-		Actually fixed vodafone support.
+        Actually fixed vodafone support.
 
 3.14		2006-07-18
 
-		Fixed vodafone support.
+    Fixed vodafone support.
 		
 3.13		2006-06-12
 
