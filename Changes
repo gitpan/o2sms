@@ -1,9 +1,12 @@
 Revision history for Perl module WWW::SMS::IE::iesms
 
+3.29		2008-08-01
+
+        Fix for o2sms.
+
 3.28		2008-04-28
 
         Fix for vodafone.
-
 
 3.27		2007-11-13
 

@@ -34,36 +34,36 @@
             <value><![CDATA[]]></value>
         </action>
         <action type="fill" step="8">
-            <xpath><![CDATA[*/FORM[2]/*/TEXTAREA[@NAME="Msg"]]]></xpath>
+            <xpath><![CDATA[*/FORM[@NAME="sendForm"]/*/TEXTAREA[@NAME="Msg"]]]></xpath>
             <value><![CDATA[{message}]]></value>
         </action>
         <action type="fill" step="9">
-            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="Msg1"]]]></xpath>
+            <xpath><![CDATA[*/FORM[@NAME="sendForm"]/*/INPUT[@NAME="Msg1"]]]></xpath>
             <value><![CDATA[{message}]]></value>
         </action>
         <action type="fill" step="10">
-            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="msgcount"]]]></xpath>
+            <xpath><![CDATA[*/FORM[@NAME="sendForm"]/*/INPUT[@NAME="msgcount"]]]></xpath>
             <value><![CDATA[{charsleft}]]></value>
         </action>
         <action type="fill" step="11">
-            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="recipients"]]]></xpath>
+            <xpath><![CDATA[*/FORM[@NAME="sendForm"]/*/INPUT[@NAME="recipients"]]]></xpath>
             <value><![CDATA[1]]></value>
         </action>
         <action type="fill" step="12">
-            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="NumMessages"]]]></xpath>
+            <xpath><![CDATA[*/FORM[@NAME="sendForm"]/*/INPUT[@NAME="NumMessages"]]]></xpath>
             <value><![CDATA[1]]></value>
         </action>
         <action type="fill" step="13">
-            <xpath><![CDATA[*/FORM[2]/*/INPUT[@NAME="command"]]]></xpath>
+            <xpath><![CDATA[*/FORM[@NAME="sendForm"]/*/INPUT[@NAME="command"]]]></xpath>
             <value><![CDATA[Send]]></value>
         </action>
 
         <action type="fill" step="14">
-            <xpath><![CDATA[*/FORM[2]/*/INPUT[@TYPE="text" and @NAME="msisdn"]]]></xpath>
+            <xpath><![CDATA[*/FORM[@NAME="sendForm"]/*/INPUT[@TYPE="text" and @NAME="msisdn"]]]></xpath>
             <value><![CDATA[{recipient}]]></value>
         </action>
         <action type="click" refresh="true" step="15">
-            <xpath><![CDATA[*/FORM[2]/]]></xpath>
+            <xpath><![CDATA[*/FORM[@NAME="sendForm"]/]]></xpath>
             <value><![CDATA[]]></value>
         </action>
         <action type="assert-text-exists" step="16">
