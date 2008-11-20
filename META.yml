@@ -1,7 +1,7 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         o2sms
-version:      3.30
+version:      3.31
 version_from: bin/o2sms
 installdirs:  site
 requires:
@@ -11,7 +11,7 @@ requires:
     Net::SSLeay:                   0
     Storable:                      0
     Term::ReadLine:                0
-    TestGen4Web::Runner:           0.09
+    TestGen4Web::Runner:           0.10
     URI:                           1.26
 
 distribution_type: module
