@@ -11,7 +11,7 @@ WriteMakefile(
 		Getopt::Long		=> 2.33,
 		Term::ReadLine		=> 0,
 		Storable		=> 0,
-		TestGen4Web::Runner	=> "0.10",
+		TestGen4Web::Runner	=> 0.11,
 		IO::Socket::SSL		=> 0,
 		Net::SSLeay		=> 0,
 		Crypt::SSLeay		=> 0,

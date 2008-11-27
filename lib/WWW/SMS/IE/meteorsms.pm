@@ -1,5 +1,5 @@
 #
-# $Id: meteorsms.pm 288 2006-08-01 18:04:33Z mackers $
+# $Id: meteorsms.pm 351 2008-11-27 13:46:28Z mackers $
 
 package WWW::SMS::IE::meteorsms;
 
@@ -36,7 +36,7 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 288 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 351 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::meteorsms::ISA = qw{WWW::SMS::IE::iesms};
 
@@ -46,8 +46,8 @@ use constant SEND_START_STEP => 7;
 use constant SEND_END_STEP => undef;
 use constant REMAINING_MESSAGES_MATCH => 1;
 use constant ACTION_FILE => "meteorsms.action";
-use constant SIMULATED_DELAY_MIN => 10;
-use constant SIMULATED_DELAY_MAX => 35;
+use constant SIMULATED_DELAY_MIN => 0;
+use constant SIMULATED_DELAY_MAX => 0;
 use constant SIMULATED_DELAY_PERCHAR => 0.25;
 
 sub _init
