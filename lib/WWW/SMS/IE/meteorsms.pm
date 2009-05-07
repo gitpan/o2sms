@@ -1,5 +1,5 @@
 #
-# $Id: meteorsms.pm 351 2008-11-27 13:46:28Z mackers $
+# $Id: meteorsms.pm 352 2008-11-27 16:16:41Z mackers $
 
 package WWW::SMS::IE::meteorsms;
 
@@ -10,9 +10,10 @@ Meteor Ireland
 
 =head1 SYNOPSIS
 
+  require WWW::SMS::IE::iesms;
   require WWW::SMS::IE::meteorsms;
 
-  my $carrier = new WWW::SMS::IE::iesms;
+  my $carrier = new WWW::SMS::IE::meteorsms;
 
   if ($carrier->login('0871234567', 'password'))
   {
@@ -36,7 +37,7 @@ For more information see L<WWW::SMS::IE::iesms>
 use strict;
 use warnings;
 use vars qw( $VERSION );
-$VERSION = sprintf("0.%02d", q$Revision: 351 $ =~ /(\d+)/);
+$VERSION = sprintf("0.%02d", q$Revision: 352 $ =~ /(\d+)/);
 
 @WWW::SMS::IE::meteorsms::ISA = qw{WWW::SMS::IE::iesms};
 
